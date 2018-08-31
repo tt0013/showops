@@ -1,0 +1,130 @@
+{% extends 'itom/base.html' %}
+{% block title %}
+    权限设置
+{% endblock %}
+{% block main %}
+    <script src="/static/ztree/js/jquery-1.4.4.min.js"></script>
+    <script src="/static/ztree/js/jquery.ztree.all-3.5.js"></script>
+    <link rel="stylesheet" href="/static/ztree/css/metroStyle.css">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <fieldset class="layui-elem-field">
+                <legend>权限 - 设置</legend>
+                <div class="layui-field-box">
+                    <form class="layui-form" action="" lay-filter="admin-form">
+                        <div class="layui-form-item">
+                            <div id="menuContent" class="menuContent">
+                                <ul id="treeDemo" class="ztree" style="margin-top:0; width:100%; height:auto;"></ul>
+                            </div>
+                        </div>
+                        <input type="hidden" name="tree_val" id="tree_val" value=''>
+                        <div class="layui-form-item">
+                            <button class="layui-btn layui-btn-sm" lay-submit lay-filter="admin-form">立即提交</button>
+                        </div>
+                    </form>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+{% endblock %}
+
+{% block myScript %}
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+    <script type="text/javascript">
+        var setting = {
+              view: {
+                selectedMulti: false,
+              },
+              check: {
+                enable: true
+              },
+              data: {
+                simpleData: {
+                  enable: true
+                }
+              },
+              callback: {
+                onCheck:onCheck
+              },
+              edit: {
+                enable: false
+              }
+        };
+
+        //var zNodes = '';
+
+        function filter(node) {
+                return node;
+        }
+
+        function onCheck(e,treeId,treeNode){
+            var treeObj=$.fn.zTree.getZTreeObj("treeDemo"),
+            nodes=treeObj.getCheckedNodes(true),
+            v="";
+            for(var i=0;i<nodes.length;i++){
+                v+=nodes[i].id + "|";
+              }
+            document.getElementById("tree_val").value=v;
+        };
+        //update
+        function UpdateNodeCheck(){
+            var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+            var nodes = zTree.getCheckedNodes(true);
+            //alert(nodes);
+            for (var i = 0; i < nodes.length; i++){
+                var node = nodes[i];
+                zTree.updateNode(node);
+            }
+        }
+
+        $(document).ready(function(){
+            var url = '/itom/authjson/'+{{ mid }};
+            $.getJSON(url,function(result){
+                // 访问zTree方法通过数据初始化节点信息
+                $.fn.zTree.init($("#treeDemo"),setting,result);
+             });
+        });
+
+        layui.config({
+            base: '/static/layuiadmin/'
+        }).extend({
+            index: 'lib/index'
+        }).use(['index', 'form'], function () {
+            var $ = layui.$
+            ,admin = layui.admin
+            ,form = layui.form;
+
+            form.render(null, 'admin-form');
+
+            form.on('submit(admin-form)', function(data){
+                var field = data.field,
+                index = layer.load(2, {shade: false});
+                admin.req({
+                    url: '/itom/groupauth/'+{{ mid }}
+                    ,method: 'POST'
+                    ,data: field
+                    ,success: function (msg) {
+                        layer.closeAll('loading');
+                        if(msg.code ==0){
+                            parent.layer.msg(msg.msg, {
+                                icon: 1,
+                                shade: [0.6, '#393D49'],
+                                time: 1500
+                            }, function () {
+                                parent.location.reload();
+                            });
+                        }else{
+                            parent.layer.msg(msg.msg, {
+                                icon: 5,
+                                shade: [0.6, '#393D49'],
+                                time: 1500
+                            });
+                        }
+                    }
+                  });
+              return false;
+            });
+
+        });
+    </script>
+{% endblock %}

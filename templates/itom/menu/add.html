@@ -1,0 +1,109 @@
+{% extends 'itom/base.html' %}
+{% block title %}
+    菜单添加
+{% endblock %}
+{% block main %}
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <fieldset class="layui-elem-field">
+                <legend>菜单 - 添加</legend>
+                <div class="layui-field-box">
+                    <form class="layui-form" action="" lay-filter="admin-form">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">菜单名称：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="name" value="" lay-verify="required" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">父级菜单：</label>
+                            <div class="layui-input-block">
+                                <select name="fid" lay-verify="required">
+                                    {% for key,val in mlist %}
+                                        <option value="{{ key }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">是否隐藏：</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" name="hide" lay-skin="switch" lay-text="是|否">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">菜单URL：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="url" value="" class="layui-input" placeholder='请输入菜单URL'>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">菜单排序：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="sort" value="0" lay-verify="required" class="layui-input" placeholder='请输入正整数，越大排名越靠后')>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">菜单图标：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="icon" value="" class="layui-input" placeholder='请输入ICON'>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-input-block">
+                                <button class="layui-btn" lay-submit lay-filter="admin-form">立即提交</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+{% endblock %}
+
+{% block myScript %}
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+    <script>
+        layui.config({
+            base: '/static/layuiadmin/'
+        }).extend({
+            index: 'lib/index'
+        }).use(['index', 'form'], function () {
+            var $ = layui.$
+            ,admin = layui.admin
+            ,form = layui.form;
+
+            form.render(null, 'admin-form');
+
+            form.on('submit(admin-form)', function(data){
+                var field = data.field,
+                index = layer.load(2, {shade: false});
+                admin.req({
+                    url: "{% url 'menuadd' %}"
+                    ,method: 'POST'
+                    ,data: field
+                    ,success: function (msg) {
+                        layer.closeAll('loading');
+                        if(msg.code ==0){
+                            parent.layer.msg(msg.msg, {
+                                icon: 1,
+                                shade: [0.6, '#393D49'],
+                                time: 1500
+                            }, function () {
+                                parent.location.reload();
+                            });
+                        }else{
+                            parent.layer.msg(msg.msg, {
+                                icon: 5,
+                                shade: [0.6, '#393D49'],
+                                time: 1500
+                            });
+                        }
+                    }
+                  });
+              return false;
+            });
+
+        });
+    </script>
+{% endblock %}

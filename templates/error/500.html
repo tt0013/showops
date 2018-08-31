@@ -1,0 +1,24 @@
+{% extends 'itom/base.html' %}
+{% block title %}
+    500 出错了
+{% endblock %}
+{% block main %}
+    <div class="layui-fluid">
+      <div class="layadmin-tips">
+        <i class="layui-icon" face>&#xe664;</i>
+        <div class="layui-text" style="font-size: 20px;">
+          好像出错了呢
+        </div>
+      </div>
+    </div>
+{% endblock %}
+{% block myScript %}
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+    <script>
+        layui.config({
+            base: '/static/layuiadmin/' //静态资源所在路径
+        }).extend({
+            index: 'lib/index' //主入口模块
+        }).use(['index']);
+    </script>
+{% endblock %}

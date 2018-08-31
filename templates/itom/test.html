@@ -1,0 +1,77 @@
+{% extends 'itom/base.html' %}
+{% block title %}
+    用户管理
+{% endblock %}
+{% block main %}
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+          <div class="layui-col-md12">
+              <div class="layui-card">
+                  <div class="layui-card-body">
+                      <form class="layui-form" id="form-admin-add" action="">
+                          <div class="layui-inline">
+                            <select name="type">
+                                <option value="">请选择查询方式</option>
+                                <option value="1">用户账号</option>
+                                <option value="2">用户昵称</option>
+                            </select>
+                          </div>
+                          <div class="layui-inline">
+                            <input class="layui-input" type="text" name="keyword" placeholder="请输入关键词">
+                          </div>
+                          <div class="layui-inline">
+                            <button class="layui-btn layui-btn-normal" data-type="reload">查询</button>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+            <div class="layui-card">
+                <div class="layui-card-body" style="border-bottom:1px solid #f6f6f6;">
+                    <button class="layui-btn layui-btn-normal">
+                      <i class="layui-icon layui-icon-add-1"></i>新增
+                  </button>
+                </div>
+              <div class="layui-card-body">
+                <table class="layui-hide" id="test-table-page"></table>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+{% endblock %}
+{% block myScript %}
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+
+    <script>
+        layui.config({
+            base: '/static/layuiadmin/' //静态资源所在路径
+        }).extend({
+            index: 'lib/index' //主入口模块
+            }).use(['index', 'form', 'table'], function(){
+                var admin = layui.admin,table = layui.table;
+                table.render({
+                  elem: '#test-table-page'
+                  ,url: layui.setter.base + 'json/table/user.js'
+                  ,cols: [[
+                    {field:'id', width:80, title: 'ID', sort: true}
+                    ,{field:'username', width:80, title: '用户名'}
+                    ,{field:'sex', width:80, title: '性别', sort: true}
+                    ,{field:'city', width:80, title: '城市'}
+                    ,{field:'sign', title: '签名', minWidth: 150}
+                    ,{field:'experience', width:80, title: '积分', sort: true}
+                    ,{field:'score', width:80, title: '评分', sort: true}
+                    ,{field:'classify', width:80, title: '职业'}
+                    ,{field:'wealth', width:135, title: '财富', sort: true}
+                  ]]
+                  ,page: true
+                });
+
+                admin.popup({
+                  content: '演示数据均为静态模拟数据，因此【切换分页和条数时】发现数据未变并非 BUG。实际使用时改成真实接口即可。'
+                  ,area: '300px'
+                  ,offset: '15px'
+                  ,shade: false
+                });
+            });
+    </script>
+{% endblock %}

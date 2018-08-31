@@ -1,0 +1,218 @@
+{% extends 'itom/base.html' %}
+{% block title %}
+    邮件发送
+{% endblock %}
+{% block main %}
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+          <div class="layui-col-md12">
+              <div class="layui-card">
+                  <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+                      <div class="layui-form-item">
+                          <div class="layui-inline">
+                              <label class="layui-form-label">平台</label>
+                              <div class="layui-input-block">
+                                  <select name="platform">
+                                      <option value="SinaShow">SinaShow</option>
+                                      <option value="FengBo">疯播</option>
+                                  </select>
+                              </div>
+                          </div>
+                          <div class="layui-inline">
+                              <label class="layui-form-label">程序</label>
+                              <div class="layui-input-block">
+                                  <select name="program">
+                                      <option value="AvsServer">AvsServer</option>
+                                      <option value="ChatServer">ChatServer</option>
+                                      <option value="TransTrans">TransTrans</option>
+                                      <option value="PhoneChatServer">PhoneChatServer</option>
+                                  </select>
+                              </div>
+                          </div>
+                          <div class="layui-inline">
+                              <label class="layui-form-label">组名</label>
+                              <div class="layui-input-block">
+                                  <input type="text" name="group" placeholder="请输入" autocomplete="off" class="layui-input">
+                              </div>
+                          </div>
+                          <div class="layui-inline">
+                              <label class="layui-form-label">部门</label>
+                              <div class="layui-input-block">
+                                  <select name="org">
+                                    <option value="">请选择</option>
+                                    {% for o in org %}
+                                        <option value="{{ o.id }}">{{ o.name }}</option>
+                                    {% endfor %}
+                                </select>
+                              </div>
+                          </div>
+                          <div class="layui-inline">
+                              <label class="layui-form-label">角色</label>
+                              <div class="layui-input-block">
+                                  <select name="group">
+                                    <option value="">请选择</option>
+                                    {% for g in group %}
+                                        <option value="{{ g.id }}">{{ g.name }}</option>
+                                    {% endfor %}
+                                </select>
+                              </div>
+                          </div>
+                          <div class="layui-inline">
+                              <div class="layui-input-block">
+                                  <button class="layui-btn layuiadmin-btn-admin" lay-submit lay-filter="LAY-org-back-search">
+                                      <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+            <div class="layui-card">
+                <div class="layui-card-body" style="border-bottom:1px solid #f6f6f6;">
+                    <button class="layui-btn layui-btn-normal api-add" data-type="add">
+                      <i class="layui-icon layui-icon-add-1"></i>新增
+                  </button>
+                </div>
+              <div class="layui-card-body">
+                <table class="layui-hide" id="test-table-page" lay-filter="demo"></table>
+                <script type="text/html" id="barDemo">
+                    <a class="layui-btn layui-btn-sm" lay-event="edit">编辑</a>
+                    <a class="layui-btn layui-btn-warm layui-btn-sm" lay-event="reset">密码重置</a>
+                    <a class="layui-btn layui-btn-danger layui-btn-sm" lay-event="del">删除</a>
+                </script>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+{% endblock %}
+{% block myScript %}
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+
+    <script>
+        layui.config({
+            base: '/static/layuiadmin/' //静态资源所在路径
+        }).extend({
+            index: 'lib/index' //主入口模块
+            }).use(['index', 'form', 'table'], function(e){
+                var $ = layui.$
+                ,form = layui.form
+                ,admin = layui.admin
+                ,table = layui.table;
+                table.render({
+                  elem: '#test-table-page'
+                  ,url: '/itom/user/'
+                  ,method: 'POST'
+                  ,limit:10
+                  ,limits : [10, 20, 30]
+                  ,cols: [[
+                    {field:'id', width:80, title: 'ID', sort: true}
+                    ,{field:'user', width:100, title: '账号'}
+                    ,{field:'name', width:100, title: '姓名'}
+                    ,{field:'org', width:100, title: '部门'}
+                    ,{field:'group', width:100, title: '角色'}
+                    ,{field:'email', width:160, title: '邮箱'}
+                    ,{field:'reg_time', width:160, title: '注册时间', sort: true}
+                    ,{field:'in_ip', width:160, title: '登陆IP'}
+                    ,{field:'up_time', minWidth: 80, title: '登陆时间', sort: true}
+                    ,{width:210, align:'center', fixed: 'right', title: '操作', toolbar: '#barDemo'}
+                  ]]
+                  ,page: true
+                });
+
+                table.on('tool(demo)', function (obj) {
+                    var data = obj.data
+                        ,layEvent = obj.event
+                        ,url='/itom/useredit/';
+                    if(layEvent == 'edit'){
+                        layer.open({
+                            type: 2,
+                            area: ['30%', '55%'],
+                            maxmin: true,
+                            content: url+data.id
+                        });
+                    }else if(layEvent == 'reset'){
+                        layer.confirm('你确定要重置么？', {
+                           btn: ['确定', '取消']
+                        }, function () {
+                            var index = layer.load(2, {shade: false});
+                            admin.req({
+                               url: '/itom/userreset/',
+                               method: 'POST',
+                               data: {'id': data.id},
+                               success: function (msg) {
+                                   layer.closeAll('loading');
+                                   if(msg.code ==0){
+                                        layer.msg(msg.msg, {
+                                            icon: 1,
+                                            shade: [0.6, '#393D49'],
+                                            time: 1500
+                                        }, function () {
+                                            layer.closeAll('dialog');
+                                            table.reload('test-table-page');
+                                        });
+                                    }else{
+                                        layer.msg(msg.msg, {
+                                            icon: 5,
+                                            shade: [0.6, '#393D49'],
+                                            time: 1500
+                                        });
+                                    }
+                               }
+                            });
+                        });
+                    }else if(layEvent == 'del'){
+                        layer.confirm('你确定要删除么？', {
+                            btn: ['确定', '取消']
+                        }, function(){
+                            var index = layer.load(2, {shade: false});
+                            admin.req({
+                                url: '/itom/userdel/',
+                                method: 'POST',
+                                data:{'id': data.id},
+                                success: function (msg) {
+                                    if(msg.code ==0){
+                                        layer.msg(msg.msg, {
+                                            icon: 1,
+                                            shade: [0.6, '#393D49'],
+                                            time: 1500
+                                        }, function () {
+                                            layer.closeAll('loading');
+                                            layer.closeAll('iframe');
+                                            table.reload('test-table-page');
+                                        });
+                                    }else{
+                                        layer.msg(msg.msg, {
+                                            icon: 5,
+                                            shade: [0.6, '#393D49'],
+                                            time: 1500
+                                        });
+                                    }
+                                }
+                            });
+                        });
+                    }
+                    return false;
+                });
+
+                $('.api-add').on('click', function () {
+                    layer.open({
+                        type: 2,
+                        area: ['30%', '55%'],
+                        maxmin: true,
+                        content: "{% url 'useradd' %}"
+                    });
+                });
+
+                //监听搜索
+                form.on('submit(LAY-org-back-search)', function (data) {
+                    var field = data.field;
+                    //执行重载
+                    table.reload('test-table-page', {
+                        where: field
+                    });
+                });
+            });
+
+    </script>
+{% endblock %}
