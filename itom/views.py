@@ -568,9 +568,10 @@ class UserInfo(View):
 
 @admin_required
 def update_mail(request):
-	loglist = Renewmail.objects.all()
+	# loglist = Renewmail.objects.all()
 	if request.method == 'GET':
 		return render(request, 'itom/update/upmail.html')
+		# return render(request, 'itom/update/index.html')
 	elif request.method == 'POST':
 		platform = request.POST.get('platform')
 		program = request.POST.get('program')
@@ -578,6 +579,6 @@ def update_mail(request):
 		dates = request.POST.get('date')
 		result = 'Successd'
 		# result = Mail.apply_async((platform, program, group, dates))
-		Renewmail.objects.create(platform=platform, program=program, group=group, dates=dates,result=result)
+		# Renewmail.objects.create(platform=platform, program=program, group=group, dates=dates,result=result)
 
-	return render(request, 'itom/update/upmail.html',{"loglsit":loglist})
+		return render(request, 'itom/update/upmail.html')
