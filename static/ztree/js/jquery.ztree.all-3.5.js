@@ -1955,7 +1955,7 @@
 			html.push("<span ID='", node.tId, consts.id.CHECK, "' class='", view.makeChkClass(setting, node), "' treeNode", consts.id.CHECK, (node.nocheck === true?" style='display:none;'":""),"></span>");
 		}
 	},
-	//update zTreeObj, add method of check
+	//upmail zTreeObj, add method of check
 	_zTreeTools = function(setting, zTreeTools) {
 		zTreeTools.checkNode = function(node, checked, checkTypeFlag, callbackFlag) {
 			var checkedKey = this.setting.data.key.checked;
@@ -2599,7 +2599,7 @@
 		n.isHover = false;
 		n.editNameFlag = false;
 	},
-	//update zTreeObj, add method of edit
+	//upmail zTreeObj, add method of edit
 	_zTreeTools = function(setting, zTreeTools) {
 		zTreeTools.cancelEditName = function(newName) {
 			var root = data.getRoot(this.setting);
