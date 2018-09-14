@@ -1,0 +1,94 @@
+{% extends 'itom/base.html' %}
+{% block title %}
+    程序更新
+{% endblock %}
+{% block main %}
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+          <div class="layui-col-md12">
+              <div class="layui-card">
+                  <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+                      <div class="layui-form-item">
+                          <div class="layui-inline">执行日期</div>
+                          <div class="layui-inline">
+                              <input type="text" name="keyword" placeholder="请输入" autocomplete="off" class="layui-input">
+                          </div>
+                          <div class="layui-inline">
+                              <button class="layui-btn layuiadmin-btn-admin" lay-submit lay-filter="LAY-org-back-search">
+                                  <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+            <div class="layui-card">
+                <div class="layui-card-body" style="border-bottom:1px solid #f6f6f6;">
+                    <button class="layui-btn layui-btn-normal api-add" data-type="add">
+                      <i class="layui-icon layui-icon-picture-fine"></i>更新配置
+                  </button>
+                </div>
+              <div class="layui-card-body">
+                <table class="layui-hide" id="test-table-page" lay-filter="demo"></table>
+                <script type="text/html" id="barDemo">
+                    <a class="layui-btn layui-btn-sm" lay-event="edit">编辑</a>
+                    <a class="layui-btn layui-btn-danger layui-btn-sm" lay-event="del">删除</a>
+                </script>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+{% endblock %}
+{% block myScript %}
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+
+    <script>
+        layui.config({
+            base: '/static/layuiadmin/' //静态资源所在路径
+        }).extend({
+            index: 'lib/index' //主入口模块
+            }).use(['index', 'form', 'table'], function(e){
+                var $ = layui.$
+                ,form = layui.form
+                ,admin = layui.admin
+                ,table = layui.table;
+                table.render({
+                  elem: '#test-table-page'
+                  ,url: '/itom/async/'
+                  ,method: 'POST'
+                  ,limit:10
+                  ,limits : [10, 20, 30]
+                  ,cols: [[
+                    {field: 'id', title: 'ID', width:50, sort: true}
+                    ,{field: 'platform', title: '平台', width:100}
+                    ,{field: 'program', title: '程序', width:180}
+                    ,{field: 'program', title: '版本号', width:180}
+                    ,{field: 'group', title: '组名', width:180}
+                    ,{field: 'dates', title: '日期', width: 180}
+                    ,{field: 'ctime', title: '时间', minWidth: 200, sort: true}
+                    ,{field: 'result', title: '结果', width: 200, align:'center', fixed: 'right'}
+                  ]]
+                  ,page: true
+                });
+
+                $('.api-add').on('click', function () {
+                    layer.open({
+                        type: 2,
+                        area: ['40%', '65%'],
+                        maxmin: true,
+                        content: "{% url 'asyncexecute' %}"
+                    });
+                });
+
+                //监听搜索
+                form.on('submit(LAY-org-back-search)', function (data) {
+                    var field = data.field;
+                    //执行重载
+                    table.reload('test-table-page', {
+                        where: field
+                    });
+                });
+            });
+
+    </script>
+{% endblock %}

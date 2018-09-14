@@ -610,3 +610,46 @@ def up_execute(request):
 
         return JsonResponse(messgs)
     return render(request, 'itom/upmail/add.html')
+
+@admin_required
+def async(request):
+    if request.method == 'POST':
+        page = request.POST.get('page', 1)
+        limit = request.POST.get('limit', 10)
+        keyword = request.POST.get('keyword', None)
+        if keyword:
+            org_list = Renewmail.objects.filter(dates=keyword)
+        else:
+            org_list = Renewmail.objects.all()
+        paginator = Paginator(org_list, int(limit))
+        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group, "dates": n.dates,
+                 "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'), "result": n.result} for n in paginator.page(int(page)).object_list]
+        data = {
+            "code": 0,
+            "msg": "",
+            "count": paginator.count,
+            "data": data,
+        }
+        return JsonResponse(data)
+
+    return render(request, 'itom/async/index.html')
+
+@admin_required
+def asyncexecute(request):
+    if request.method == 'POST':
+        platform = request.POST.get('platform')
+        program = request.POST.get('program')
+        group = request.POST.get('group')
+        dates = request.POST.get('date')
+        if platform and program and group and dates:
+            try:
+                result = execute(platform, program, group, dates)
+                Renewmail.objects.create(platform=platform, program=program, group=group, dates=dates, result=result)
+                messgs = {'code': 0, 'msg': '发送成功!'}
+            except:
+                messgs = {'code': 1, 'msg': '发送失败!'}
+        else:
+            messgs = {'code': 1, 'msg': '执行失败!'}
+
+        return JsonResponse(messgs)
+    return render(request, 'itom/async/add.html')

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'itom.apps.ItomConfig',
     'public.apps.PublicConfig',
     'login.apps.LoginConfig',
+    'djcelery',
 ]
 
 MIDDLEWARE = [
@@ -83,8 +84,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'CMDB',
         'USER': 'root',
-        'PASSWORD': 'yangtianqi',
-        'HOST': '192.168.9.169',
+        'PASSWORD': 'sinashow',
+        'HOST': '192.168.9.125',
         'PORT': '3306',
         'OPTIONS': {
             'autocommit': True,
@@ -135,5 +136,26 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
+
 # session
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+#celery settings
+#celery中间人 redis://redis服务所在的ip地址:端口/数据库号
+BROKER_URL = 'redis://:sinashow@192.168.9.167:6379'
+#celery结果返回，可用于跟踪结果
+# CELERY_RESULT_BACKEND = 'redis://:sinashow@192.168.9.167:6379'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler' # 定时任务调度器
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+
+#celery内容等消息的格式设置
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+#celery时区设置，使用settings中TIME_ZONE同样的时区
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = False
+CELERYD_HIJACK_ROOT_LOGGER = False
+
+CELERYD_CONCURRENCY = 10
+CELERYD_MAX_TASKS_PER_CHILD = 3

@@ -43,7 +43,8 @@ urlpatterns = [
     url(r"^menuedit/(?P<id>\d+)$", views.menu_edit, name="menuedit"),
     url(r"^menudel/", views.menu_del, name="menudel"),
     #程序更新
-    # url(r"^upmail/", views.upmail, name="upmail"),
     url(r"^updatemail/", views.update_mail, name="updatemail"),
     url(r"^upexecute/", views.up_execute, name="upexecute"),
+    url(r"^async/", views.async, name="async"),
+    url(r"^asyncexecute/", views.asyncexecute, name="asyncexecute"),
 ]
