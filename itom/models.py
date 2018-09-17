@@ -73,3 +73,16 @@ class Renewmail(models.Model):
 
 	def __str__(self):
 		return self.result
+
+class Async(models.Model):
+	id = models.AutoField(primary_key=True)
+	platform = models.CharField(max_length=32)
+	program = models.CharField(max_length=32)
+	version = models.CharField(max_length=32)
+	group = models.DateField(max_length=32)
+	week = models.DateField(max_length=32)
+	ctime = models.DateTimeField(auto_now_add=True)
+	result = models.CharField(max_length=64)
+
+	def __str__(self):
+		return self.result

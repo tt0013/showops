@@ -85,7 +85,7 @@ DATABASES = {
         'NAME': 'CMDB',
         'USER': 'root',
         'PASSWORD': 'sinashow',
-        'HOST': '192.168.9.125',
+        'HOST': '192.168.9.126',
         'PORT': '3306',
         'OPTIONS': {
             'autocommit': True,

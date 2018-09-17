@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import User, Org, Group, Menu, Renewmail
+from .models import User, Org, Group, Menu, Renewmail ,Async
 import json
 from public.views import Sendmail, user_serach, Menulist, admin_required, login_required
 # Create your views here.
@@ -618,11 +618,11 @@ def async(request):
         limit = request.POST.get('limit', 10)
         keyword = request.POST.get('keyword', None)
         if keyword:
-            org_list = Renewmail.objects.filter(dates=keyword)
+            org_list = Async.objects.filter(version=keyword)
         else:
-            org_list = Renewmail.objects.all()
+            org_list = Async.objects.all()
         paginator = Paginator(org_list, int(limit))
-        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group, "dates": n.dates,
+        data = [{"id": n.id, "platform": n.platform, "program": n.program, "week": n.week,"group": n.group,
                  "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'), "result": n.result} for n in paginator.page(int(page)).object_list]
         data = {
             "code": 0,
@@ -639,12 +639,14 @@ def asyncexecute(request):
     if request.method == 'POST':
         platform = request.POST.get('platform')
         program = request.POST.get('program')
+        version = request.POST.get('version')
+        week = request.POST.get('week')
         group = request.POST.get('group')
-        dates = request.POST.get('date')
-        if platform and program and group and dates:
+        ftpadd = request.POST.get('ftpadd')
+        if platform and program and version and week and group and ftpadd:
             try:
-                result = execute(platform, program, group, dates)
-                Renewmail.objects.create(platform=platform, program=program, group=group, dates=dates, result=result)
+                # result = execute(platform, program, group, week)
+                # Renewmail.objects.create(platform=platform, program=program, group=group, dates=week, result=result)
                 messgs = {'code': 0, 'msg': '发送成功!'}
             except:
                 messgs = {'code': 1, 'msg': '发送失败!'}
@@ -653,3 +655,4 @@ def asyncexecute(request):
 
         return JsonResponse(messgs)
     return render(request, 'itom/async/add.html')
+
