@@ -95,4 +95,4 @@ def clients(salt_client,salt_method,salt_params):
 
 
 if __name__ == '__main__':
-    client('183.131.73.49','free -m')
+    client('192.168.9.126','free -m')

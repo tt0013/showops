@@ -4,7 +4,7 @@ from django.views import View
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import User, Org, Group, Menu, Renewmail ,Async
-import json
+import json,requests
 from public.views import Sendmail, user_serach, Menulist, admin_required, login_required
 # Create your views here.
 
@@ -645,6 +645,19 @@ def asyncexecute(request):
         ftpadd = request.POST.get('ftpadd')
         if platform and program and version and week and group and ftpadd:
             try:
+                pro_info = {
+                    'platform': platform,
+                    'program': program,
+                    'version': version,
+                    'week': week,
+                    'group': group,
+                    'ftpadd': ftpadd,
+                    'user': 'salt',
+                    'pwd': 'saltstack'
+                }
+                headers = {'content-type': 'application/json'}
+                r = requests.post("http://192.168.5.105:8002/json", data=json.dumps(pro_info), headers=headers)
+                print(r.json())
                 # result = execute(platform, program, group, week)
                 # Renewmail.objects.create(platform=platform, program=program, group=group, dates=week, result=result)
                 messgs = {'code': 0, 'msg': '发送成功!'}
