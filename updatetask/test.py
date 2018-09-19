@@ -10,7 +10,10 @@ from replace import replace
 from flask import Flask, request, Response
 from flask_restful import reqparse, abort, Api, Resource
 from flask_sqlalchemy import SQLAlchemy
-
+import os,smtplib,configparser
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from updatetask.CreateHtml import CreateHtml
 
 
 app = Flask(__name__)
@@ -22,9 +25,64 @@ parser_post.add_argument("pwd", type=str, required=True)
 parser_post.add_argument("platform", type=str, required=True)
 parser_post.add_argument("program", type=str, required=True)
 parser_post.add_argument("group", type=str, required=True)
-parser_post.add_argument("week", type=str, required=True)
-parser_post.add_argument("version", type=str, required=True)
-parser_post.add_argument("ftpadd", type=str, required=True)
+parser_post.add_argument("week", type=str)
+parser_post.add_argument("version", type=str)
+parser_post.add_argument("ftpadd", type=str)
+parser_post.add_argument("day", type=str)
+
+class SendMail(object):
+    def __init__(self,args):
+        self.args = args
+        self.username = 'monitor@sinashow.com'
+        self.passwd = 'monitor'
+        # self.recv = ['yangtianqi@sinashow.com','tt06090013@163.com']
+        self.recv = ['yangtianqi@sinashow.com']
+        self.filename = r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\CreateHtml.html'
+        self.email_host = 'mail.sinashow.com'
+        self.port = 25
+
+
+    def send_mail(self):
+        try:
+            CreateHtml.CreateHtml(self.filename, self.args['platform'], self.args['program'], self.args['day'])
+        except Exception as e:
+            return e
+
+        msg = MIMEMultipart()
+        #发送内容的对象
+        if self.filename:#处理附件的
+            html = open(self.filename,'r',encoding='utf-8').read()
+            html_part = MIMEText(html, 'html', 'utf-8')
+            msg.attach(html_part)
+        # 邮件主题
+        if self.args['platform'] == 'SinaShow':
+            msg['Subject'] = u'[重要通知]-[程序更新]-[SHOW平台程序更新]-[%s]' % self.args['day']
+        else:
+            msg['Subject'] = u'[重要通知]-[程序更新]-[疯播平台程序更新]-[%s]' % self.args['day']
+        msg['From'] = 'Automation Program <%s>' % self.username  # 发送者账号
+        msg['To'] = ';'.join(self.recv)  # 接收者账号列表
+        self.smtp = smtplib.SMTP(self.email_host,port=self.port)
+        #发送邮件服务器的对象
+        self.smtp.login(self.username,self.passwd)
+        try:
+            self.smtp.sendmail(self.username,self.recv,msg.as_string())
+        #记录邮件状态，发送更新后的信息
+            conf = configparser.ConfigParser()
+            conf.add_section('MAIL')
+            conf.set('MAIL', 'platform', self.args['platform'])
+            conf.set('MAIL', 'program', self.args['program'])
+            conf.set('MAIL', 'group', self.args['group'])
+            conf.set('MAIL', 'date', self.args['day'])
+            conf.set('MAIL', 'state', '1')
+            with open(r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\mail.ini', "w",encoding='utf-8') as f:
+                conf.write(f)
+            return "Success"
+        except Exception:
+            return "2"
+
+
+    # def __del__(self):
+    #     self.smtp.quit()
 
 
 class Async(object):
@@ -162,10 +220,24 @@ class TodoList(Resource):
         else:
             abort(400)
 
+class SendList(Resource):
+
+    def post(self):
+        args = parser_post.parse_args()
+        # 构建新参数
+        if args['user'] == "sa1t" and args['pwd'] == "saltstack":
+        # 调用方法to_do
+            mail = SendMail(args)
+            info = {"info": mail.send_mail()}
+        # # 资源添加成功，返回201
+            return info,201
+        else:
+            abort(400)
 
 
 # 设置路由，即路由地址为http://127.0.0.1:5000/users
 api.add_resource(TodoList, "/json")
+api.add_resource(SendList, "/json")
 
 if __name__ == '__main__':
     app.run(host='192.168.9.126',port='5000',debug=True)
