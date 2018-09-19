@@ -19,7 +19,7 @@ context = ssl._create_unverified_context()
 from urllib3.exceptions import InsecureRequestWarning
 urllib3.disable_warnings(InsecureRequestWarning)
 
-salt_api = "https://183.131.205.49:8000/"
+salt_api = "https://192.168.9.126:8000/"
 
 
 class SaltApi:
