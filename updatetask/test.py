@@ -68,14 +68,24 @@ class SendMail(object):
             self.smtp.sendmail(self.username,self.recv,msg.as_string())
         #记录邮件状态，发送更新后的信息
             conf = configparser.ConfigParser()
-            conf.add_section('MAIL')
-            conf.set('MAIL', 'platform', self.args['platform'])
-            conf.set('MAIL', 'program', self.args['program'])
-            conf.set('MAIL', 'group', self.args['group'])
-            conf.set('MAIL', 'date', self.args['day'])
-            conf.set('MAIL', 'state', '1')
-            with open(r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\mail.ini', "w",encoding='utf-8') as f:
-                conf.write(f)
+            conf.read(r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\mail.ini')
+            try:
+                if conf.options(section=self.args['program']):
+                    conf.set(self.args['program'], 'platform', self.args['platform'])
+                    conf.set(self.args['program'], 'program', self.args['program'])
+                    conf.set(self.args['program'], 'group', self.args['group'])
+                    conf.set(self.args['program'], 'date', self.args['day'])
+                    conf.set(self.args['program'], 'state', '1')
+                    conf.write(open(r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\mail.ini','w',encoding='utf-8'))
+            except configparser.NoSectionError:
+                conf.add_section(self.args['program'])
+                conf.set(self.args['program'], 'platform', self.args['platform'])
+                conf.set(self.args['program'], 'program', self.args['program'])
+                conf.set(self.args['program'], 'group', self.args['group'])
+                conf.set(self.args['program'], 'date', self.args['day'])
+                conf.set(self.args['program'], 'state', '1')
+                conf.write(open(r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\mail.ini','w',encoding='utf-8'))
+                
             return "Success"
         except Exception:
             return "2"
