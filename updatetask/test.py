@@ -75,7 +75,7 @@ class SendMail(object):
                     conf.set(self.args['program'], 'program', self.args['program'])
                     conf.set(self.args['program'], 'group', self.args['group'])
                     conf.set(self.args['program'], 'date', self.args['day'])
-                    conf.set(self.args['program'], 'state', '1')
+                    conf.set(self.args['program'], 'state', 1)
                     conf.write(open(r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\mail.ini','w',encoding='utf-8'))
             except configparser.NoSectionError:
                 conf.add_section(self.args['program'])
@@ -83,7 +83,7 @@ class SendMail(object):
                 conf.set(self.args['program'], 'program', self.args['program'])
                 conf.set(self.args['program'], 'group', self.args['group'])
                 conf.set(self.args['program'], 'date', self.args['day'])
-                conf.set(self.args['program'], 'state', '1')
+                conf.set(self.args['program'], 'state', 1)
                 conf.write(open(r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\mail.ini','w',encoding='utf-8'))
                 
             return "Success"
