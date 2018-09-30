@@ -33,9 +33,12 @@ class Result(object):
 
 
 if __name__ == '__main__':
-    if conf.get('MAIL','state') == '1':
-        s = Result()
-        s.send()
-        conf.set('MAIL', 'state', '0')
-        with open(r'E:\Django_Node\showops\updatetask\CreateHtml\mail.ini', "w", encoding='utf-8') as f:
-            conf.write(f)
+    #if conf.get('MAIL','state') == '1':
+    for s in conf.sections():
+        if conf.getint(s,'state') == 1:
+            m = Result()
+            m.send()
+            conf.set(s, 'state', 0)
+            conf.write(open(r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\mail.ini','w',encoding='utf-8'))
+        else:
+            break
