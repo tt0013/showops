@@ -74,6 +74,14 @@ class Renewmail(models.Model):
 	def __str__(self):
 		return self.result
 
+
+class Saltgroup(models.Model):
+	id = models.AutoField(primary_key=True)
+	platform = models.CharField(max_length=32)
+	program = models.CharField(max_length=32)
+	group = models.CharField(max_length=32)
+	ctime = models.DateTimeField(auto_now_add=True)
+
 class Async(models.Model):
 	id = models.AutoField(primary_key=True)
 	platform = models.CharField(max_length=32)

@@ -61,8 +61,15 @@ def CreateHtml(filename,platform,program,day,group=None):
         page.write('<th>Program Version Number</th>\n')
         page.write('</tr></thead>\n')
         # with open('mgversion','w+') as f:
-        #     f.write(subprocess.getoutput("/usr/bin/salt -N %s grains.item %s" % (group,platform))+'\n'+str(today))
-        with open('E:\PyCharmScripts\CMDB\AsyncTask\mail\mgversion','r') as f:
+        #     if program == "AvsServer":
+        #         f.write(subprocess.getoutput("/usr/bin/salt -N %s grains.item avsversion" % group)
+        #     elif program == "ChatServer":
+        #         f.write(subprocess.getoutput("/usr/bin/salt -N %s grains.item crsversion" % group)
+        #     elif program == "TransTrans":
+        #         f.write(subprocess.getoutput("/usr/bin/salt -N %s grains.item ttversion" % group)
+        #     elif program =="PhoneChatServer":
+        #         f.write(subprocess.getoutput("/usr/bin/salt -N %s grains.item phonecrsversion" % group)
+        with open(r'E:\PycharmScript\CMDB\showops\updatetask\CreateHtml\mgversion','r') as f:
             for lists in f.readlines():
                 if re.findall(r'(\d|None|Minion)', lists):
                     ips = lists.split(':')
@@ -92,9 +99,7 @@ def CreateHtml(filename,platform,program,day,group=None):
         page.write('</html>\n')
 
 
-    return os.getcwd()
-
-
+    # return os.getcwd()
 
 
 

@@ -3,9 +3,10 @@ from django.http import JsonResponse
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import User, Org, Group, Menu, Renewmail ,Async
+from .models import User, Org, Group, Menu, Renewmail ,Async,Saltgroup
 import json,requests
 from public.views import Sendmail, user_serach, Menulist, admin_required, login_required
+from updatetask.tasks import upmail
 # Create your views here.
 
 @login_required
@@ -566,10 +567,9 @@ class UserInfo(View):
 	def password(request):
 		return render(request, 'itom/user/password.html')
 
-from updatetask.Sendmail import execute
 
 @admin_required
-def update_mail(request):
+def mail_mess(request):
     if request.method == 'POST':
         page = request.POST.get('page', 1)
         limit = request.POST.get('limit', 10)
@@ -591,17 +591,64 @@ def update_mail(request):
 
     return render(request, 'itom/upmail/index.html')
 
+from djcelery.models import TaskMeta,TaskState
 @admin_required
-def up_execute(request):
+def mail_execute(request):
+    if request.method == 'GET':
+        menu = Saltgroup.objects.all()
+        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group} for n in menu]
+        threeSelectData = {
+            "SinaShow":
+                {'val': "SinaShow",
+                 'items': {
+                     "ChatServer":
+                         {'val': "ChatServer", 'items':
+                             {"BusinessCrs": "BusinessCrs",
+                              "NobusinessCrs": "NobusinessCrs",
+                              "FinanceCrs": "FinanceCrs"
+                              }
+                          },
+                     "AvsServer":
+                         {'val': "AvsServer", 'items':
+                             {"SinashowAvsgroup1": "SinashowAvsgroup1",
+                              "SinashowAvsgroup2": "SinashowAvsgroup2",
+                              "SinashowAvsgroup3": "SinashowAvsgroup3"
+                              }
+                          },
+                     "TransTrans":
+                         {'val': "TransTrans", 'items':
+                             {"SinashowTTgroup7": "SinashowTTgroup7",
+                              "SinashowTTgroup8": "SinashowTTgroup8"
+                              }
+                          },
+                 }
+                 },
+            "疯播":
+                {'val': "FengBo",
+                 'items': {
+                     "PhoneChatServer":
+                         {'val': "PhoneChatServer", 'items':
+                             {
+                                 "FengBo_PhoneChat": "FengBo_PhoneChat"
+                             }
+                          }
+                 }
+                 }
+        }
+        print(data)
     if request.method == 'POST':
         platform = request.POST.get('platform')
         program = request.POST.get('program')
         group = request.POST.get('group')
         dates = request.POST.get('date')
+        print(platform,program,group,dates)
         if platform and program and group and dates:
             try:
-                result = execute(platform, program, group, dates)
-                Renewmail.objects.create(platform=platform, program=program, group=group, dates=dates, result=result)
+                results = upmail.apply_async((platform,program,group,dates))
+                Renewmail.objects.create(platform=platform, program=program, group=group, dates=dates, result=results.state)
+                print(results)
+                b = TaskMeta.objects.get(task_id='8278e9fc-b5d4-41d1-9dbb-f87fd3cce8c2').date_done
+                # messgs = result.get()
                 messgs = {'code': 0, 'msg': '发送成功!'}
             except:
                 messgs = {'code': 1, 'msg': '发送失败!'}
@@ -668,4 +715,77 @@ def asyncexecute(request):
 
         return JsonResponse(messgs)
     return render(request, 'itom/async/add.html')
+
+@admin_required
+def salt_group(request):
+    if request.method == 'POST':
+        page = request.POST.get('page', 1)
+        limit = request.POST.get('limit', 10)
+        keyword = request.POST.get('keyword', None)
+        if keyword:
+            org_list = Saltgroup.objects.filter(group=keyword)
+        else:
+            org_list = Saltgroup.objects.all()
+        paginator = Paginator(org_list, int(limit))
+        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group,
+                 "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S')} for n in paginator.page(int(page)).object_list]
+        data = {
+            "code": 0,
+            "msg": "",
+            "count": paginator.count,
+            "data": data,
+        }
+        return JsonResponse(data)
+
+    return render(request, 'itom/saltgroup/index.html')
+
+
+@admin_required
+def salt_add(request):
+    if request.method == 'POST':
+        platform = request.POST.get('platform',None)
+        program = request.POST.get('program',None)
+        group = request.POST.get('group',None)
+        if platform and program and group:
+            Saltgroup.objects.create(
+                platform=platform,
+                program=program,
+                group=group,
+            )
+            messgs = {'code': 0, 'msg': '添加成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '添加失败!'}
+        return JsonResponse(messgs)
+    else:
+        return render(request, 'itom/saltgroup/add.html')
+
+@admin_required
+def salt_edit(request,id):
+    if request.method == 'POST':
+        program = request.POST.get('program', None)
+        group = request.POST.get('group', None)
+        if program and group:
+            Saltgroup.objects.filter(id=id).update(program=program)
+            Saltgroup.objects.filter(id=id).update(group=group)
+            messgs = {'code': 0, 'msg': '修改成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败!'}
+        return HttpResponse(json.dumps(messgs), content_type="application/json")
+
+    data = Saltgroup.objects.filter(id=id).first()
+    return render(request, 'itom/saltgroup/edit.html', {"data": data})
+
+
+@admin_required
+def salt_del(request):
+    if request.method == 'POST':
+        id = request.POST.get('id',None)
+        if id:
+            Saltgroup.objects.filter(id=id).delete()
+            messgs = {'code': 0, 'msg': '修改成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败!'}
+
+        return JsonResponse(messgs)
+
 
