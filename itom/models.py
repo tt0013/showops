@@ -62,18 +62,6 @@ class Menu(models.Model):
 	icon = models.CharField(max_length=50, null=True, verbose_name="图标")
 	level = models.SmallIntegerField(verbose_name="level")
 
-class Renewmail(models.Model):
-	id = models.AutoField(primary_key=True)
-	platform = models.CharField(max_length=32)
-	program = models.CharField(max_length=32)
-	group = models.CharField(max_length=32)
-	dates = models.DateField(null=True)
-	ctime = models.DateTimeField(auto_now_add=True)
-	result = models.CharField(max_length=64)
-
-	def __str__(self):
-		return self.result
-
 
 class Saltgroup(models.Model):
 	id = models.AutoField(primary_key=True)
@@ -82,15 +70,26 @@ class Saltgroup(models.Model):
 	group = models.CharField(max_length=32)
 	ctime = models.DateTimeField(auto_now_add=True)
 
-class Async(models.Model):
+class Renewmail(models.Model):
 	id = models.AutoField(primary_key=True)
 	platform = models.CharField(max_length=32)
 	program = models.CharField(max_length=32)
-	version = models.CharField(max_length=32)
-	group = models.DateField(max_length=32)
-	week = models.DateField(max_length=32)
+	group = models.CharField(max_length=32)
+	dates = models.DateField(null=True)
 	ctime = models.DateTimeField(auto_now_add=True)
-	result = models.CharField(max_length=64)
+	res = models.CharField(max_length=64)
 
-	def __str__(self):
-		return self.result
+class Saltopera(models.Model):
+    id = models.AutoField(primary_key=True)
+    platform = models.CharField(max_length=32)
+    program = models.CharField(max_length=32)
+    group = models.CharField(max_length=32)
+    wk = models.CharField(max_length=32)
+    version = models.CharField(max_length=32)
+    ctime = models.DateTimeField(auto_now_add=True)
+    res = models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.res
+
+

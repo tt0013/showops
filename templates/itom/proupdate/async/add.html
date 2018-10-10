@@ -14,7 +14,7 @@
     <div class="layui-card">
         <div class="layui-card-body">
             <fieldset class="layui-elem-field">
-                <legend>更新邮件 - 发送</legend>
+                <legend>程序更新 - 配置</legend>
                 <div class="layui-field-box">
                     <form class="layui-form" action="" lay-filter="admin-form">
                         <div class="layui-form-item">
@@ -33,14 +33,35 @@
                             <div class="layui-input-block">
                                 <label class="layui-form-label"></label>
                                 <select name="group" id="group" lay-filter="group">
-                                    <option value="">请选择组名/option>
+                                    <option value="">请选择组名</option>
                                 </select>
                             </div>
                         </div>
                         <div class="layui-form-item">
                             <label class="layui-form-label">日期：</label>
                             <div class="layui-input-block">
-                                <input type="text" name="date" id="date1" autocomplete="off" class="layui-input" lay-verify="required">
+                                <select name="week" lay-verify="required">
+                                    <option value=""></option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">版本号：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="version" value="" lay-verify="required" placeholder="请输入" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">程序地址：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="ftpadd" value="" lay-verify="required" placeholder="Ftp地址" class="layui-input">
                             </div>
                         </div>
                         <div class="layui-form-item">
@@ -55,6 +76,7 @@
         </div>
     </div>
 
+
     <script src="/static/linkage/jquery-1.12.4.js"></script>
     <script src="/static/layuiadmin/layui/layui.js"></script>
     <script type="text/javascript">
@@ -66,27 +88,20 @@
             v2: null,
             v3: null
         };
-
     </script>
-    <script type="text/javascript" src="/static/linkage/data.js"></script>
+    <script>
+        var threeSelectData = {{ threeSelectData|safe }};
+    </script>
     <script type="text/javascript" src="/static/linkage/province.js"></script>
     <script>
         layui.config({
             base: '/static/layuiadmin/'
         }).extend({
             index: 'lib/index'
-        }).use(['index', 'form', 'laydate'], function () {
+        }).use(['index', 'form'], function () {
             var $ = layui.$
             ,admin = layui.admin
-            ,form = layui.form
-            ,laydate = layui.laydate;
-
-            laydate.render({
-                elem: '#date'
-            });
-            laydate.render({
-                elem: '#date1'
-            });
+            ,form = layui.form;
 
             form.render(null, 'admin-form');
 
@@ -94,7 +109,7 @@
                 var field = data.field,
                 index = layer.load(2, {shade: false});
                 admin.req({
-                    url: "{% url 'upexecute' %}"
+                    url: "{% url 'asyncexecute' %}"
                     ,method: 'POST'
                     ,data: field
                     ,success: function (msg) {
@@ -118,7 +133,7 @@
                   });
               return false;
             });
-
         });
     </script>
+
 </body>

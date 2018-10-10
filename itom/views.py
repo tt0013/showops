@@ -1,118 +1,126 @@
+import json
 from django.shortcuts import render, HttpResponse
 from django.http import JsonResponse
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import User, Org, Group, Menu, Renewmail ,Async,Saltgroup
-import json,requests
+from .models import User, Org, Group, Menu, Renewmail, Saltopera,Saltgroup
 from public.views import Sendmail, user_serach, Menulist, admin_required, login_required
-from updatetask.tasks import upmail
+
+
+
 # Create your views here.
 
 @login_required
 def index(request):
-	tree = Menulist.condition_to_tree(request.session.get('uid'))
-	#处理隐藏菜单
-	#data = [t for t in tree if int(t['hide']) == 0]
-	strtree = Menulist.glist_to_tree(tree)
+    tree = Menulist.condition_to_tree(request.session.get('uid'))
+    # 处理隐藏菜单
+    # data = [t for t in tree if int(t['hide']) == 0]
+    strtree = Menulist.glist_to_tree(tree)
 
-	return render(request, 'itom/index.html', {'strtree': strtree})
+    return render(request, 'itom/index.html', {'strtree': strtree})
+
 
 @login_required
 def home(request):
-	return  render(request, 'itom/home.html')
+    return render(request, 'itom/home.html')
+
 
 @admin_required
 def org(request):
-	'''
+    '''
 	获取所有部门信息，POST请求利用paginator进行分页，
 	并且写好前端插件所需的data格式数据，以json格式返回
 	:param request:
 	:return:
 	'''
-	if request.method == 'POST':
-		page = request.POST.get('page', 1)
-		limit = request.POST.get('limit', 10)
-		keyword =request.POST.get('keyword', None)
-		if keyword:
-			org_list = Org.objects.filter(name=keyword)
-		else:
-			org_list = Org.objects.all()
-		paginator = Paginator(org_list, int(limit))
-		data = [{"id": n.id, "name": n.name, "describe": n.describe} for n in paginator.page(int(page)).object_list]
-		data = {
-			"code": 0,
-			"msg": "",
-			"count": paginator.count,
-			"data": data,
-		}
-		return JsonResponse(data)
+    if request.method == 'POST':
+        page = request.POST.get('page', 1)
+        limit = request.POST.get('limit', 10)
+        keyword = request.POST.get('keyword', None)
+        if keyword:
+            org_list = Org.objects.filter(name=keyword)
+        else:
+            org_list = Org.objects.all()
+        paginator = Paginator(org_list, int(limit))
+        data = [{"id": n.id, "name": n.name, "describe": n.describe} for n in paginator.page(int(page)).object_list]
+        data = {
+            "code": 0,
+            "msg": "",
+            "count": paginator.count,
+            "data": data,
+        }
+        return JsonResponse(data)
 
-	return render(request, 'itom/org/index.html')
+    return render(request, 'itom/org/index.html')
+
 
 @admin_required
 def org_add(request):
-	'''
+    '''
 	部门添加，并且将添加成功或失败的结果，以json格式返回给前端
 	:param request:
 	:return:
 	'''
-	if request.method == 'POST':
-		name = request.POST.get('name', None)
-		describe = request.POST.get('describe', None)
-		if name and describe:
-			Org.objects.create(
-				name=name,
-				describe=describe,
-			)
-			messgs = {'code': 0, 'msg': '添加成功!'}
-		else:
-			messgs = {'code': 1, 'msg': '添加失败!'}
-		return JsonResponse(messgs)
+    if request.method == 'POST':
+        name = request.POST.get('name', None)
+        describe = request.POST.get('describe', None)
+        if name and describe:
+            Org.objects.create(
+                name=name,
+                describe=describe,
+            )
+            messgs = {'code': 0, 'msg': '添加成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '添加失败!'}
+        return JsonResponse(messgs)
 
-	return render(request, 'itom/org/add.html')
+    return render(request, 'itom/org/add.html')
+
 
 @admin_required
 def org_edit(request, id):
-	'''
+    '''
 	GET获取对应部门信息, POST部门描述信息修改，
 	并将修改成功或失败的结果以json格式返回给前端
 	:param request:
 	:param id:
 	:return:
 	'''
-	if request.method == 'POST':
-		describe = request.POST.get('describe', None)
-		if describe:
-			Org.objects.filter(id=id).update(describe=describe)
-			messgs = {'code': 0, 'msg': '修改成功!'}
-		else:
-			messgs = {'code': 1, 'msg': '修改失败!'}
-		return HttpResponse(json.dumps(messgs), content_type="application/json")
+    if request.method == 'POST':
+        describe = request.POST.get('describe', None)
+        if describe:
+            Org.objects.filter(id=id).update(describe=describe)
+            messgs = {'code': 0, 'msg': '修改成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败!'}
+        return HttpResponse(json.dumps(messgs), content_type="application/json")
 
-	data = Org.objects.filter(id=id).first()
-	return render(request, 'itom/org/edit.html', {"data": data})
+    data = Org.objects.filter(id=id).first()
+    return render(request, 'itom/org/edit.html', {"data": data})
+
 
 @admin_required
 def org_del(request):
-	'''
+    '''
 	删除对应部门，并将删除成功或失败的结果，以json格式返回给前端
 	:param request:
 	:return:
 	'''
-	if request.method == 'POST':
-		id = request.POST.get('id', None)
-		if id:
-			Org.objects.filter(id=id).delete()
-			messgs = {'code': 0, 'msg': '删除成功!'}
-		else:
-			messgs = {'code': 1, 'msg': '删除失败!'}
+    if request.method == 'POST':
+        id = request.POST.get('id', None)
+        if id:
+            Org.objects.filter(id=id).delete()
+            messgs = {'code': 0, 'msg': '删除成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '删除失败!'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
+
 
 @admin_required
 def group(request):
-	'''
+    '''
 	角色管理，通过layuiadmin封装好的异步通过post调用获取分页数据，
 	如果有查询请求，会更具搜索添加进行分页返回数据
 	:param request:
@@ -121,30 +129,31 @@ def group(request):
 	keyword: 查询条件，角色名
 	:return:
 	'''
-	if request.method == 'POST':
-		page = request.POST.get('page', 1)
-		limit = request.POST.get('limit', 10)
-		keyword =request.POST.get('keyword', None)
-		if keyword:
-			group_list = Group.objects.filter(name=keyword)
-		else:
-			group_list = Group.objects.all()
-		paginator = Paginator(group_list, int(limit))
-		data = [{"id": n.id, "name": n.name, "status": n.status,"describe": n.describe} \
-				for n in paginator.page(int(page)).object_list]
-		data = {
-			"code": 0,
-			"msg": "",
-			"count": paginator.count,
-			"data": data,
-		}
-		return JsonResponse(data)
+    if request.method == 'POST':
+        page = request.POST.get('page', 1)
+        limit = request.POST.get('limit', 10)
+        keyword = request.POST.get('keyword', None)
+        if keyword:
+            group_list = Group.objects.filter(name=keyword)
+        else:
+            group_list = Group.objects.all()
+        paginator = Paginator(group_list, int(limit))
+        data = [{"id": n.id, "name": n.name, "status": n.status, "describe": n.describe} \
+                for n in paginator.page(int(page)).object_list]
+        data = {
+            "code": 0,
+            "msg": "",
+            "count": paginator.count,
+            "data": data,
+        }
+        return JsonResponse(data)
 
-	return render(request, 'itom/group/index.html')
+    return render(request, 'itom/group/index.html')
+
 
 @admin_required
 def group_add(request):
-	'''
+    '''
 	角色添加，post传递添加数据
 	:param request:
 	name: 角色名
@@ -152,28 +161,29 @@ def group_add(request):
 	describe: 角色描述
 	:return:
 	'''
-	if request.method == 'POST':
-		name = request.POST.get('name', None)
-		status = request.POST.get('status', 0)
-		describe = request.POST.get('describe', None)
-		if status:
-			status = 1
-		if name and describe:
-			group_obj = Group.objects.create(name=name, status=status, describe=describe)
-			menu_obj = Menu.objects.get(id=1)
-			group_obj.menu.add(menu_obj)
+    if request.method == 'POST':
+        name = request.POST.get('name', None)
+        status = request.POST.get('status', 0)
+        describe = request.POST.get('describe', None)
+        if status:
+            status = 1
+        if name and describe:
+            group_obj = Group.objects.create(name=name, status=status, describe=describe)
+            menu_obj = Menu.objects.get(id=1)
+            group_obj.menu.add(menu_obj)
 
-			messgs = {'code': 0, 'msg': '添加成功!'}
-		else:
-			messgs = {'code': 1, 'msg': '添加失败!'}
+            messgs = {'code': 0, 'msg': '添加成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '添加失败!'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
 
-	return render(request, 'itom/group/add.html')
+    return render(request, 'itom/group/add.html')
+
 
 @admin_required
 def group_edit(request, id):
-	'''
+    '''
 	角色修改，get请求对应id的角色信息，post传递修改数据
 	:param request:
 	status: 角色状态（0表示禁用，1表示启用）
@@ -184,70 +194,74 @@ def group_edit(request, id):
 	get请求返回渲染html
 	post请求返回json
 	'''
-	if request.method == 'POST':
-		status = request.POST.get('status', 0)
-		describe = request.POST.get('describe', None)
-		if status:
-			status = 1
-		if status or describe:
-			Group.objects.filter(id=id).update(status=status, describe=describe)
-			messgs = {'code': 0, 'msg': '修改成功!'}
-		else:
-			messgs = {'code': 1, 'msg': '修改失败!'}
+    if request.method == 'POST':
+        status = request.POST.get('status', 0)
+        describe = request.POST.get('describe', None)
+        if status:
+            status = 1
+        if status or describe:
+            Group.objects.filter(id=id).update(status=status, describe=describe)
+            messgs = {'code': 0, 'msg': '修改成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败!'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
 
-	data = Group.objects.filter(id=id).first()
+    data = Group.objects.filter(id=id).first()
 
-	return render(request, 'itom/group/edit.html', {"data": data})
+    return render(request, 'itom/group/edit.html', {"data": data})
+
 
 @admin_required
 def group_auth(request, id):
-	if request.method == 'POST':
-		tree_val = request.POST.get('tree_val', None)
-		if tree_val:
-			tlist = [int(i) for i in list(filter(None, tree_val.strip('\'').split('|')))]
-			menu_obj = Menu.objects.filter(id__in=tlist)
-			group_obj = Group.objects.get(id=id)
-			#先清空对应权限
-			group_obj.menu.clear()
-			#然后添加对应权限
-			group_obj.menu.add(*menu_obj)
-			messgs = {'code': 0, 'msg': '修改成功!'}
-		else:
-			messgs = {'code': 1, 'msg': '修改失败!'}
-		return JsonResponse(messgs)
+    if request.method == 'POST':
+        tree_val = request.POST.get('tree_val', None)
+        if tree_val:
+            tlist = [int(i) for i in list(filter(None, tree_val.strip('\'').split('|')))]
+            menu_obj = Menu.objects.filter(id__in=tlist)
+            group_obj = Group.objects.get(id=id)
+            # 先清空对应权限
+            group_obj.menu.clear()
+            # 然后添加对应权限
+            group_obj.menu.add(*menu_obj)
+            messgs = {'code': 0, 'msg': '修改成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败!'}
+        return JsonResponse(messgs)
 
-	return render(request, 'itom/group/auth.html', {'mid': id})
+    return render(request, 'itom/group/auth.html', {'mid': id})
+
 
 @admin_required
 def group_auth_json(request, id):
-	data = Menulist.json_to_menu(int(id))
+    data = Menulist.json_to_menu(int(id))
 
-	return JsonResponse(data, safe=False)
+    return JsonResponse(data, safe=False)
+
 
 @admin_required
 def group_del(request):
-	'''
+    '''
 	角色删除
 	:param request:
 	id: 角色对应的id
 	:return:
 	post请求返回json
 	'''
-	if request.method == 'POST':
-		id = request.POST.get('id', None)
-		if id:
-			Group.objects.filter(id=id).delete()
-			messgs = {'code': 0, 'msg': '删除成功!'}
-		else:
-			messgs = {'code': 1, 'msg': '删除失败!'}
+    if request.method == 'POST':
+        id = request.POST.get('id', None)
+        if id:
+            Group.objects.filter(id=id).delete()
+            messgs = {'code': 0, 'msg': '删除成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '删除失败!'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
+
 
 @admin_required
 def user(request):
-	'''
+    '''
 	用户管理
 	:param request:
 	page: 页数
@@ -258,37 +272,38 @@ def user(request):
 	get请求返回渲染html
 	post请求返回json
 	'''
-	if request.method == 'POST':
-		page = request.POST.get('page', 1)
-		limit = request.POST.get('limit', 10)
-		data = request.POST.dict()
-		#判断查询条件
-		dict = user_serach(data)
-		if dict:
-			user_list = User.objects.filter(**dict)
-		else:
-			user_list = User.objects.all()
-		paginator = Paginator(user_list, int(limit))
-		data = [{"id": n.id, "user": n.user, "name": n.name, "email": n.email,
-				 "reg_time": n.reg_time.strftime('%Y-%m-%d %H:%M:%S'), "in_ip": n.in_ip,
-				 "up_time": n.up_time.strftime('%Y-%m-%d %H:%M:%S'),
-				 "group": Group.objects.get(id=n.group_id).name,
-				 "org": Org.objects.get(id=n.org_id).name} for n in paginator.page(int(page)).object_list]
-		data = {
-			"code": 0,
-			"msg": "",
-			"count": paginator.count,
-			"data": data,
-		}
-		return JsonResponse(data)
-	org = Org.objects.all()
-	group = Group.objects.all()
+    if request.method == 'POST':
+        page = request.POST.get('page', 1)
+        limit = request.POST.get('limit', 10)
+        data = request.POST.dict()
+        # 判断查询条件
+        dict = user_serach(data)
+        if dict:
+            user_list = User.objects.filter(**dict)
+        else:
+            user_list = User.objects.all()
+        paginator = Paginator(user_list, int(limit))
+        data = [{"id": n.id, "user": n.user, "name": n.name, "email": n.email,
+                 "reg_time": n.reg_time.strftime('%Y-%m-%d %H:%M:%S'), "in_ip": n.in_ip,
+                 "up_time": n.up_time.strftime('%Y-%m-%d %H:%M:%S'),
+                 "group": Group.objects.get(id=n.group_id).name,
+                 "org": Org.objects.get(id=n.org_id).name} for n in paginator.page(int(page)).object_list]
+        data = {
+            "code": 0,
+            "msg": "",
+            "count": paginator.count,
+            "data": data,
+        }
+        return JsonResponse(data)
+    org = Org.objects.all()
+    group = Group.objects.all()
 
-	return render(request, 'itom/user/index.html', {"org": org, "group": group})
+    return render(request, 'itom/user/index.html', {"org": org, "group": group})
+
 
 @admin_required
 def user_add(request):
-	'''
+    '''
 	用户添加
 	:param request:
 	data: 所有post请求参数（包含：user,name,org,group,email）
@@ -302,44 +317,45 @@ def user_add(request):
 	Sendmail类发送邮件给对应邮箱地址；不论
 	是否失败都会返回json格式的状态信息
 	'''
-	if request.method == 'POST':
-		data = request.POST.dict()
-		if data:
-			utf = User.objects.filter(user=data['user']).first()
-			if utf:
-				messgs = {'code': 1, 'msg': '账号已经存在!'}
-			else:
-				#create password
-				pwd = Sendmail.pass_random()
-				org = Org.objects.get(id=int(data['org']))
-				group = Group.objects.get(id=int(data['group']))
-				User.objects.create(
-					user=data['user'],
-					name=data['name'],
-					password=pwd,
-					org=org,
-					group=group,
-					email=data['email']
-				)
-				try:
-					#发送邮件
-					Sendmail.mail_template(data['user'], pwd)
-					Sendmail.send_mail(data['email'])
-					messgs = {'code': 0, 'msg': '添加成功!'}
-				except:
-					messgs = {'code': 1, 'msg': '邮件发送失败!'}
-		else:
-			messgs = {'code': 1, 'msg': '添加失败!'}
-		return JsonResponse(messgs)
+    if request.method == 'POST':
+        data = request.POST.dict()
+        if data:
+            utf = User.objects.filter(user=data['user']).first()
+            if utf:
+                messgs = {'code': 1, 'msg': '账号已经存在!'}
+            else:
+                # create password
+                pwd = Sendmail.pass_random()
+                org = Org.objects.get(id=int(data['org']))
+                group = Group.objects.get(id=int(data['group']))
+                User.objects.create(
+                    user=data['user'],
+                    name=data['name'],
+                    password=pwd,
+                    org=org,
+                    group=group,
+                    email=data['email']
+                )
+                try:
+                    # 发送邮件
+                    Sendmail.mail_template(data['user'], pwd)
+                    Sendmail.send_mail(data['email'])
+                    messgs = {'code': 0, 'msg': '添加成功!'}
+                except:
+                    messgs = {'code': 1, 'msg': '邮件发送失败!'}
+        else:
+            messgs = {'code': 1, 'msg': '添加失败!'}
+        return JsonResponse(messgs)
 
-	org = Org.objects.all()
-	group = Group.objects.all()
+    org = Org.objects.all()
+    group = Group.objects.all()
 
-	return render(request, 'itom/user/add.html', {"org": org, "group": group})
+    return render(request, 'itom/user/add.html', {"org": org, "group": group})
+
 
 @admin_required
 def user_edit(request, id):
-	'''
+    '''
 	用户编辑
 	:param request:
 	org: 部门id
@@ -353,32 +369,33 @@ def user_edit(request, id):
 	post: 将传递过来的信息，先做下判断，然后再
 	进行修改，成功或失败都会返回json格式状态信息
 	'''
-	if request.method == 'POST':
-		org = request.POST.get('org', None)
-		group = request.POST.get('group', None)
-		email = request.POST.get('email', None)
-		if org and group and email:
-			org = Org.objects.get(id=int(org))
-			group = Group.objects.get(id=int(group))
-			User.objects.filter(id=id).update(
-				org_id=org,
-				group_id=group,
-				email=email
-			)
-			messgs = {'code': 0, 'msg': '修改成功!'}
-		else:
-			messgs = {'code': 1, 'msg': '修改失败!'}
+    if request.method == 'POST':
+        org = request.POST.get('org', None)
+        group = request.POST.get('group', None)
+        email = request.POST.get('email', None)
+        if org and group and email:
+            org = Org.objects.get(id=int(org))
+            group = Group.objects.get(id=int(group))
+            User.objects.filter(id=id).update(
+                org_id=org,
+                group_id=group,
+                email=email
+            )
+            messgs = {'code': 0, 'msg': '修改成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败!'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
 
-	data = User.objects.filter(id=id).first()
-	org = Org.objects.all()
-	group = Group.objects.all()
-	return render(request, 'itom/user/edit.html', {"data": data, "org": org, "group": group})
+    data = User.objects.filter(id=id).first()
+    org = Org.objects.all()
+    group = Group.objects.all()
+    return render(request, 'itom/user/edit.html', {"data": data, "org": org, "group": group})
+
 
 @admin_required
 def user_reset(request):
-	'''
+    '''
 	用户密码重置
 	:param request:
 	id：用户id
@@ -387,28 +404,29 @@ def user_reset(request):
 	利用model里面User中password函数将密码加密，并且更新，然后发送
 	新密码给对用邮箱地址，成功或失败都会返回json格式状态信息
 	'''
-	if request.method == 'POST':
-		id = request.POST.get('id', None)
-		if id:
-			#reset
-			user = User.objects.filter(id=id).first()
-			pwd = Sendmail.pass_random()
-			user.password = pwd
-			user.save()
-			try:
-				Sendmail.mail_template(user.user,pwd)
-				Sendmail.send_mail(user.email)
-				messgs = {'code': 0, 'msg': '密码重置成功!'}
-			except:
-				messgs = {'code': 1, 'msg': '邮件发送失败!'}
-		else:
-			messgs = {'code': 1, 'msg': '密码重置失败!'}
+    if request.method == 'POST':
+        id = request.POST.get('id', None)
+        if id:
+            # reset
+            user = User.objects.filter(id=id).first()
+            pwd = Sendmail.pass_random()
+            user.password = pwd
+            user.save()
+            try:
+                Sendmail.mail_template(user.user, pwd)
+                Sendmail.send_mail(user.email)
+                messgs = {'code': 0, 'msg': '密码重置成功!'}
+            except:
+                messgs = {'code': 1, 'msg': '邮件发送失败!'}
+        else:
+            messgs = {'code': 1, 'msg': '密码重置失败!'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
+
 
 @admin_required
 def user_del(request):
-	'''
+    '''
 	用户删除
 	:param request:
 	id：用户id
@@ -416,156 +434,206 @@ def user_del(request):
 	post: 判断传递id信息，通过id删除对应的记录，
 	成功或失败都会返回json格式状态信息
 	'''
-	if request.method == 'POST':
-		id = request.POST.get('id', None)
-		if id:
-			User.objects.filter(id=id).delete()
-			messgs = {'code': 0, 'msg': '删除成功!'}
-		else:
-			messgs = {'code': 1, 'msg': '删除失败!'}
+    if request.method == 'POST':
+        id = request.POST.get('id', None)
+        if id:
+            User.objects.filter(id=id).delete()
+            messgs = {'code': 0, 'msg': '删除成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '删除失败!'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
+
 
 @admin_required
 def menu(request):
-	data = Menulist.mlist_to_tree()
-	Menulist.glist_to_tree(data)
-	mlist = Menulist.list_to_menu(data)
-	list = json.dumps(mlist)
+    data = Menulist.mlist_to_tree()
+    Menulist.glist_to_tree(data)
+    mlist = Menulist.list_to_menu(data)
+    list = json.dumps(mlist)
 
-	return render(request, 'itom/menu/index.html', {'list': list})
+    return render(request, 'itom/menu/index.html', {'list': list})
+
 
 @admin_required
 def menu_add(request):
-	if request.method == 'POST':
-		name = request.POST.get('name', None)
-		fid = request.POST.get('fid', 0)
-		hide = request.POST.get('hide', 0)
-		url = request.POST.get('url', '')
-		sort = request.POST.get('sort', 0)
-		icon = request.POST.get('icon', '')
-		if hide:
-			hide = 1
-		if name:
-			try:
-				Menu.objects.create(
-					name=name,
-					fid=fid,
-					url=url,
-					sort=sort,
-					icon=icon,
-					auth=0,
-					hide=hide,
-					level=0
-				)
-				messgs = {'code': 0, 'msg': '添加成功！'}
-			except:
-				messgs = {'code': 1, 'msg': '添加失败！'}
-		else:
-			messgs = {'code': 1, 'msg': '添加失败！'}
+    if request.method == 'POST':
+        name = request.POST.get('name', None)
+        fid = request.POST.get('fid', 0)
+        hide = request.POST.get('hide', 0)
+        url = request.POST.get('url', '')
+        sort = request.POST.get('sort', 0)
+        icon = request.POST.get('icon', '')
+        if hide:
+            hide = 1
+        if name:
+            try:
+                Menu.objects.create(
+                    name=name,
+                    fid=fid,
+                    url=url,
+                    sort=sort,
+                    icon=icon,
+                    auth=0,
+                    hide=hide,
+                    level=0
+                )
+                messgs = {'code': 0, 'msg': '添加成功！'}
+            except:
+                messgs = {'code': 1, 'msg': '添加失败！'}
+        else:
+            messgs = {'code': 1, 'msg': '添加失败！'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
 
-	data = Menulist.mlist_to_tree()
-	list = Menulist.form_at_tree(data)
-	list.insert(0, {"id": "0", "showName": u"顶级菜单"})
-	mlist = [(int(n['id']), n['showName']) for n in list]
+    data = Menulist.mlist_to_tree()
+    list = Menulist.form_at_tree(data)
+    list.insert(0, {"id": "0", "showName": u"顶级菜单"})
+    mlist = [(int(n['id']), n['showName']) for n in list]
 
-	return render(request, 'itom/menu/add.html', {'mlist': mlist})
+    return render(request, 'itom/menu/add.html', {'mlist': mlist})
+
 
 @admin_required
 def menu_edit(request, id):
-	if request.method == 'POST':
-		name = request.POST.get('name', None)
-		fid = request.POST.get('fid', 0)
-		hide = request.POST.get('hide', 0)
-		url = request.POST.get('url', '')
-		sort = request.POST.get('sort', 0)
-		icon = request.POST.get('icon', '')
-		if hide:
-			hide = 1
-		if name:
-			try:
-				Menu.objects.filter(id=id).update(
-					name=name,
-					fid=fid,
-					url=url,
-					sort=sort,
-					icon=icon,
-					hide=hide
-				)
-				messgs = {'code': 0, 'msg': '修改成功！'}
-			except:
-				messgs = {'code': 1, 'msg': '修改失败！'}
-		else:
-			messgs = {'code': 1, 'msg': '修改失败！'}
+    if request.method == 'POST':
+        name = request.POST.get('name', None)
+        fid = request.POST.get('fid', 0)
+        hide = request.POST.get('hide', 0)
+        url = request.POST.get('url', '')
+        sort = request.POST.get('sort', 0)
+        icon = request.POST.get('icon', '')
+        if hide:
+            hide = 1
+        if name:
+            try:
+                Menu.objects.filter(id=id).update(
+                    name=name,
+                    fid=fid,
+                    url=url,
+                    sort=sort,
+                    icon=icon,
+                    hide=hide
+                )
+                messgs = {'code': 0, 'msg': '修改成功！'}
+            except:
+                messgs = {'code': 1, 'msg': '修改失败！'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败！'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
 
-	menu = Menu.objects.get(id=id)
-	data = Menulist.mlist_to_tree()
-	list = Menulist.form_at_tree(data)
-	list.insert(0, {"id": "0", "showName": u"顶级菜单"})
-	mlist = [(int(n['id']), n['showName']) for n in list]
+    menu = Menu.objects.get(id=id)
+    data = Menulist.mlist_to_tree()
+    list = Menulist.form_at_tree(data)
+    list.insert(0, {"id": "0", "showName": u"顶级菜单"})
+    mlist = [(int(n['id']), n['showName']) for n in list]
 
-	return render(request, 'itom/menu/edit.html', {'menu': menu, 'mlist': mlist})
+    return render(request, 'itom/menu/edit.html', {'menu': menu, 'mlist': mlist})
+
 
 @admin_required
 def menu_del(request):
-	if request.method == 'POST':
-		id = request.POST.get('id', None)
-		if id:
-			fid = Menu.objects.filter(fid=int(id)).first()
-			if fid:
-				messgs = {'code': 1, 'msg': '请先删除子菜单！'}
-			else:
-				Menu.objects.filter(id=int(id)).delete()
-				messgs = {'code': 0, 'msg': '删除成功！'}
-		else:
-			messgs = {'code': 1, 'msg': '菜单ID为空！'}
+    if request.method == 'POST':
+        id = request.POST.get('id', None)
+        if id:
+            fid = Menu.objects.filter(fid=int(id)).first()
+            if fid:
+                messgs = {'code': 1, 'msg': '请先删除子菜单！'}
+            else:
+                Menu.objects.filter(id=int(id)).delete()
+                messgs = {'code': 0, 'msg': '删除成功！'}
+        else:
+            messgs = {'code': 1, 'msg': '菜单ID为空！'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
+
 
 @method_decorator(login_required, name='dispatch')
 class UserInfo(View):
 
-	def get(self, request, id):
-		uinfo = User.objects.get(id=id)
-		if uinfo:
-			data = {
-				"user": uinfo.user,
-				"name": uinfo.name,
-				"org": Org.objects.get(id=uinfo.org_id).name,
-				"group": Group.objects.get(id=uinfo.group_id).name,
-				"email": uinfo.email,
-				"in_ip": uinfo.in_ip,
-				"up_time": uinfo.up_time.strftime('%Y-%m-%d %H:%M:%S')
-			}
-			return render(request, 'itom/user/userinfo.html', {"data": data})
+    def get(self, request, id):
+        uinfo = User.objects.get(id=id)
+        if uinfo:
+            data = {
+                "user": uinfo.user,
+                "name": uinfo.name,
+                "org": Org.objects.get(id=uinfo.org_id).name,
+                "group": Group.objects.get(id=uinfo.group_id).name,
+                "email": uinfo.email,
+                "in_ip": uinfo.in_ip,
+                "up_time": uinfo.up_time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            return render(request, 'itom/user/userinfo.html', {"data": data})
 
-	def post(self, request, id):
-		oldpwd = request.POST.get('oldPassword', None)
-		pwd = request.POST.get('password', None)
-		repwd = request.POST.get('repassword', None)
-		if oldpwd and pwd and repwd:
-			user = User.objects.get(id=id)
-			if user.verify_password(oldpwd):
-				if pwd == repwd:
-					user.password = pwd
-					user.save()
-					messgs = {'code': 0, 'msg': '修改成功!'}
-				else:
-					messgs = {'code': 1, 'msg': '新密码不一致!'}
-			else:
-				messgs = {'code': 1, 'msg': '老密码错误!'}
-		else:
-			messgs = {'code': 1, 'msg': '修改密码异常!'}
+    def post(self, request, id):
+        oldpwd = request.POST.get('oldPassword', None)
+        pwd = request.POST.get('password', None)
+        repwd = request.POST.get('repassword', None)
+        if oldpwd and pwd and repwd:
+            user = User.objects.get(id=id)
+            if user.verify_password(oldpwd):
+                if pwd == repwd:
+                    user.password = pwd
+                    user.save()
+                    messgs = {'code': 0, 'msg': '修改成功!'}
+                else:
+                    messgs = {'code': 1, 'msg': '新密码不一致!'}
+            else:
+                messgs = {'code': 1, 'msg': '老密码错误!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改密码异常!'}
 
-		return JsonResponse(messgs)
+        return JsonResponse(messgs)
 
-	@staticmethod
-	def password(request):
-		return render(request, 'itom/user/password.html')
+    @staticmethod
+    def password(request):
+        return render(request, 'itom/user/password.html')
+
+
+from updatetask.tasks import Smail,Operation
+from djcelery.models import TaskMeta, TaskState
+def Tselect():
+    menu = Saltgroup.objects.all()
+    avs_dict, crs_dict, tt_dict, fb_dict = {}, {}, {}, {}
+    for row in menu:
+        if row.program == 'AvsServer':
+            avs_dict[row.group] = row.group
+        elif row.program == 'ChatServer':
+            crs_dict[row.group] = row.group
+        elif row.program == 'TransTrans':
+            tt_dict[row.group] = row.group
+        elif row.program == 'PhoneChatServer':
+            fb_dict[row.group] = row.group
+    threeSelectData = {
+        "SinaShow":
+            {"val": "SinaShow",
+             "items": {
+                 "ChatServer":
+                     {"val": "ChatServer", "items":
+                         crs_dict
+                      },
+                 "AvsServer":
+                     {"val": "AvsServer", "items":
+                         avs_dict
+                      },
+                 "TransTrans":
+                     {"val": "TransTrans", "items":
+                         tt_dict
+                      },
+             }
+             },
+        "疯播":
+            {"val": "FengBo",
+             "items": {
+                 "PhoneChatServer":
+                     {"val": "PhoneChatServer", "items":
+                         fb_dict
+                      }
+             }
+             }
+    }
+    return threeSelectData
 
 
 @admin_required
@@ -580,7 +648,8 @@ def mail_mess(request):
             org_list = Renewmail.objects.all()
         paginator = Paginator(org_list, int(limit))
         data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group, "dates": n.dates,
-                 "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'), "result": n.result} for n in paginator.page(int(page)).object_list]
+                 "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'), "result": n.res} for n in
+                paginator.page(int(page)).object_list]
         data = {
             "code": 0,
             "msg": "",
@@ -589,65 +658,24 @@ def mail_mess(request):
         }
         return JsonResponse(data)
 
-    return render(request, 'itom/upmail/index.html')
+    return render(request, 'itom/proupdate/upmail/index.html')
 
-from djcelery.models import TaskMeta,TaskState
+
 @admin_required
 def mail_execute(request):
-    if request.method == 'GET':
-        menu = Saltgroup.objects.all()
-        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group} for n in menu]
-        threeSelectData = {
-            "SinaShow":
-                {'val': "SinaShow",
-                 'items': {
-                     "ChatServer":
-                         {'val': "ChatServer", 'items':
-                             {"BusinessCrs": "BusinessCrs",
-                              "NobusinessCrs": "NobusinessCrs",
-                              "FinanceCrs": "FinanceCrs"
-                              }
-                          },
-                     "AvsServer":
-                         {'val': "AvsServer", 'items':
-                             {"SinashowAvsgroup1": "SinashowAvsgroup1",
-                              "SinashowAvsgroup2": "SinashowAvsgroup2",
-                              "SinashowAvsgroup3": "SinashowAvsgroup3"
-                              }
-                          },
-                     "TransTrans":
-                         {'val': "TransTrans", 'items':
-                             {"SinashowTTgroup7": "SinashowTTgroup7",
-                              "SinashowTTgroup8": "SinashowTTgroup8"
-                              }
-                          },
-                 }
-                 },
-            "疯播":
-                {'val': "FengBo",
-                 'items': {
-                     "PhoneChatServer":
-                         {'val': "PhoneChatServer", 'items':
-                             {
-                                 "FengBo_PhoneChat": "FengBo_PhoneChat"
-                             }
-                          }
-                 }
-                 }
-        }
-        print(data)
+    # if request.method == 'GET':
     if request.method == 'POST':
         platform = request.POST.get('platform')
         program = request.POST.get('program')
         group = request.POST.get('group')
         dates = request.POST.get('date')
-        print(platform,program,group,dates)
         if platform and program and group and dates:
             try:
-                results = upmail.apply_async((platform,program,group,dates))
-                Renewmail.objects.create(platform=platform, program=program, group=group, dates=dates, result=results.state)
+                results = Smail.apply_async((platform, program, group, dates))
+                Renewmail.objects.create(platform=platform, program=program, group=group, dates=dates,
+                                         res=results.state)
                 print(results)
-                b = TaskMeta.objects.get(task_id='8278e9fc-b5d4-41d1-9dbb-f87fd3cce8c2').date_done
+                # b = TaskMeta.objects.get(task_id='8278e9fc-b5d4-41d1-9dbb-f87fd3cce8c2').date_done
                 # messgs = result.get()
                 messgs = {'code': 0, 'msg': '发送成功!'}
             except:
@@ -656,7 +684,9 @@ def mail_execute(request):
             messgs = {'code': 1, 'msg': '执行失败!'}
 
         return JsonResponse(messgs)
-    return render(request, 'itom/upmail/add.html')
+
+    return render(request, 'itom/proupdate/upmail/add.html', {"threeSelectData": Tselect()})
+
 
 @admin_required
 def async(request):
@@ -665,12 +695,13 @@ def async(request):
         limit = request.POST.get('limit', 10)
         keyword = request.POST.get('keyword', None)
         if keyword:
-            org_list = Async.objects.filter(version=keyword)
+            org_list = Saltopera.objects.filter(version=keyword)
         else:
-            org_list = Async.objects.all()
+            org_list = Saltopera.objects.all()
         paginator = Paginator(org_list, int(limit))
-        data = [{"id": n.id, "platform": n.platform, "program": n.program, "week": n.week,"group": n.group,
-                 "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'), "result": n.result} for n in paginator.page(int(page)).object_list]
+        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group,"week": n.wk,"version": n.version,
+                 "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'), "result": n.res} for n in
+                paginator.page(int(page)).object_list]
         data = {
             "code": 0,
             "msg": "",
@@ -679,7 +710,7 @@ def async(request):
         }
         return JsonResponse(data)
 
-    return render(request, 'itom/async/index.html')
+    return render(request, 'itom/proupdate/async/index.html')
 
 @admin_required
 def asyncexecute(request):
@@ -687,25 +718,14 @@ def asyncexecute(request):
         platform = request.POST.get('platform')
         program = request.POST.get('program')
         version = request.POST.get('version')
-        week = request.POST.get('week')
+        wk = request.POST.get('week')
         group = request.POST.get('group')
         ftpadd = request.POST.get('ftpadd')
-        if platform and program and version and week and group and ftpadd:
+        if platform and program and version and wk and group and ftpadd:
             try:
-                pro_info = {
-                    'platform': platform,
-                    'program': program,
-                    'version': version,
-                    'week': week,
-                    'group': group,
-                    'ftpadd': ftpadd,
-                    'user': 'salt',
-                    'pwd': 'saltstack'
-                }
-                headers = {'content-type': 'application/json'}
-                r = requests.post("http://192.168.5.105:8002/json", data=json.dumps(pro_info), headers=headers)
-                print(r.json())
-                # result = execute(platform, program, group, week)
+                results = Operation.apply_async((platform,program,group,wk,version,ftpadd))
+                Saltopera.objects.create(platform=platform,program=program,group=group,wk=wk,version=version,res=results.state)
+                print(results)
                 # Renewmail.objects.create(platform=platform, program=program, group=group, dates=week, result=result)
                 messgs = {'code': 0, 'msg': '发送成功!'}
             except:
@@ -714,7 +734,8 @@ def asyncexecute(request):
             messgs = {'code': 1, 'msg': '执行失败!'}
 
         return JsonResponse(messgs)
-    return render(request, 'itom/async/add.html')
+    return render(request, 'itom/proupdate/async/add.html', {"threeSelectData": Tselect()})
+
 
 @admin_required
 def salt_group(request):
@@ -737,15 +758,15 @@ def salt_group(request):
         }
         return JsonResponse(data)
 
-    return render(request, 'itom/saltgroup/index.html')
+    return render(request, 'itom/proupdate/saltgroup/index.html')
 
 
 @admin_required
 def salt_add(request):
     if request.method == 'POST':
-        platform = request.POST.get('platform',None)
-        program = request.POST.get('program',None)
-        group = request.POST.get('group',None)
+        platform = request.POST.get('platform', None)
+        program = request.POST.get('program', None)
+        group = request.POST.get('group', None)
         if platform and program and group:
             Saltgroup.objects.create(
                 platform=platform,
@@ -757,10 +778,11 @@ def salt_add(request):
             messgs = {'code': 1, 'msg': '添加失败!'}
         return JsonResponse(messgs)
     else:
-        return render(request, 'itom/saltgroup/add.html')
+        return render(request, 'itom/proupdate/saltgroup/add.html')
+
 
 @admin_required
-def salt_edit(request,id):
+def salt_edit(request, id):
     if request.method == 'POST':
         program = request.POST.get('program', None)
         group = request.POST.get('group', None)
@@ -773,13 +795,13 @@ def salt_edit(request,id):
         return HttpResponse(json.dumps(messgs), content_type="application/json")
 
     data = Saltgroup.objects.filter(id=id).first()
-    return render(request, 'itom/saltgroup/edit.html', {"data": data})
+    return render(request, 'itom/proupdate/saltgroup/edit.html', {"data": data})
 
 
 @admin_required
 def salt_del(request):
     if request.method == 'POST':
-        id = request.POST.get('id',None)
+        id = request.POST.get('id', None)
         if id:
             Saltgroup.objects.filter(id=id).delete()
             messgs = {'code': 0, 'msg': '修改成功!'}
@@ -787,5 +809,3 @@ def salt_del(request):
             messgs = {'code': 1, 'msg': '修改失败!'}
 
         return JsonResponse(messgs)
-
-

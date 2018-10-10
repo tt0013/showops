@@ -4,16 +4,6 @@
 
 import json
 
-a = {'code': 0, 'msg': 'Success'}
-print(a.json())
-
-
-
-
-
-
-
-
 
 
 

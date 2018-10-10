@@ -9,7 +9,7 @@
               <div class="layui-card">
                   <div class="layui-form layui-card-header layuiadmin-card-header-auto">
                       <div class="layui-form-item">
-                          <div class="layui-inline">执行日期</div>
+                          <div class="layui-inline">更新版本号</div>
                           <div class="layui-inline">
                               <input type="text" name="keyword" placeholder="请输入" autocomplete="off" class="layui-input">
                           </div>
@@ -59,14 +59,14 @@
                   ,limit:10
                   ,limits : [10, 20, 30]
                   ,cols: [[
-                    {field: 'id', title: 'ID', width:50, sort: true}
-                    ,{field: 'platform', title: '平台', width:100}
-                    ,{field: 'program', title: '程序', width:180}
-                    ,{field: 'version', title: '版本号', width:180}
-                    ,{field: 'group', title: '组名', width:180}
-                    ,{field: 'week', title: '日期', width: 180}
-                    ,{field: 'ctime', title: '时间', minWidth: 200, sort: true}
-                    ,{field: 'result', title: '结果', width: 200, align:'center', fixed: 'right'}
+                    {field: 'id', title: 'ID', width:80, align:'center', sort: true}
+                    ,{field: 'platform', title: '平台', width:180, align:'center'}
+                    ,{field: 'program', title: '程序', width:180, align:'center'}
+                    ,{field: 'group', title: '组名', width:220, align:'center'}
+                    ,{field: 'week', title: '日期', width: 220, align:'center'}
+                    ,{field: 'version', title: '版本号', width:220, align:'center'}
+                    ,{field: 'ctime', title: '时间', minWidth: 220, align:'center', sort: true}
+                    ,{field: 'result', title: '结果', width: 220, align:'center', fixed: 'right'}
                   ]]
                   ,page: true
                 });
