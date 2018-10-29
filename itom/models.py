@@ -68,10 +68,12 @@ class Saltgroup(models.Model):
 	platform = models.CharField(max_length=32)
 	program = models.CharField(max_length=32)
 	group = models.CharField(max_length=32)
+	policyadd = models.CharField(max_length=64)
 	ctime = models.DateTimeField(auto_now_add=True)
 
 class Renewmail(models.Model):
 	id = models.AutoField(primary_key=True)
+	task_id = models.CharField(max_length=64,null=True)
 	platform = models.CharField(max_length=32)
 	program = models.CharField(max_length=32)
 	group = models.CharField(max_length=32)
@@ -81,11 +83,22 @@ class Renewmail(models.Model):
 
 class Saltopera(models.Model):
     id = models.AutoField(primary_key=True)
+    task_id = models.CharField(max_length=64, null=True)
     platform = models.CharField(max_length=32)
     program = models.CharField(max_length=32)
     group = models.CharField(max_length=32)
     wk = models.CharField(max_length=32)
     version = models.CharField(max_length=32)
+    ctime = models.DateTimeField(auto_now_add=True)
+    res = models.CharField(max_length=64)
+
+class Rsyslog(models.Model):
+    id = models.AutoField(primary_key=True)
+    task_id = models.CharField(max_length=64, null=True)
+    program = models.CharField(max_length=32)
+    hostname = models.CharField(max_length=32)
+    ip = models.CharField(max_length=32)
+    dates = models.CharField(max_length=32)
     ctime = models.DateTimeField(auto_now_add=True)
     res = models.CharField(max_length=64)
 

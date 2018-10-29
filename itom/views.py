@@ -4,9 +4,10 @@ from django.http import JsonResponse
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .models import User, Org, Group, Menu, Renewmail, Saltopera,Saltgroup
+from .models import User, Org, Group, Menu, Renewmail, Saltopera, Saltgroup, Rsyslog
 from public.views import Sendmail, user_serach, Menulist, admin_required, login_required
-
+from updatetask.tasks import Smail, Operation, Rlog
+from djcelery.models import TaskMeta
 
 
 # Create your views here.
@@ -591,8 +592,6 @@ class UserInfo(View):
         return render(request, 'itom/user/password.html')
 
 
-from updatetask.tasks import Smail,Operation
-from djcelery.models import TaskMeta, TaskState
 def Tselect():
     menu = Saltgroup.objects.all()
     avs_dict, crs_dict, tt_dict, fb_dict = {}, {}, {}, {}
@@ -635,7 +634,6 @@ def Tselect():
     }
     return threeSelectData
 
-
 @admin_required
 def mail_mess(request):
     if request.method == 'POST':
@@ -643,11 +641,28 @@ def mail_mess(request):
         limit = request.POST.get('limit', 10)
         keyword = request.POST.get('keyword', None)
         if keyword:
-            org_list = Renewmail.objects.filter(dates=keyword)
+            org_list = Renewmail.objects.filter(version=keyword)
         else:
             org_list = Renewmail.objects.all()
+            for row in org_list:
+                try:
+                    res = Renewmail.objects.get(task_id=row.task_id).res
+                    tres = TaskMeta.objects.get(task_id=row.task_id).result
+                    sta = TaskMeta.objects.get(task_id=row.task_id).status
+                    if res != sta and tres != None:
+                        Renewmail.objects.filter(task_id=row.task_id).update(res=sta)
+                    elif tres == None and res != 'FAILURE':
+                        Renewmail.objects.filter(task_id=row.task_id).update(res='FAILURE')
+                    else:
+                        pass
+                except:
+                    res = Renewmail.objects.get(task_id=row.task_id).res
+                    if res != 'FAILURE':
+                        Renewmail.objects.filter(task_id=row.task_id).update(res='FAILURE')
+                    else:
+                        pass
         paginator = Paginator(org_list, int(limit))
-        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group, "dates": n.dates,
+        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group,"dates": n.dates,
                  "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'), "result": n.res} for n in
                 paginator.page(int(page)).object_list]
         data = {
@@ -660,10 +675,8 @@ def mail_mess(request):
 
     return render(request, 'itom/proupdate/upmail/index.html')
 
-
 @admin_required
 def mail_execute(request):
-    # if request.method == 'GET':
     if request.method == 'POST':
         platform = request.POST.get('platform')
         program = request.POST.get('program')
@@ -672,11 +685,9 @@ def mail_execute(request):
         if platform and program and group and dates:
             try:
                 results = Smail.apply_async((platform, program, group, dates))
-                Renewmail.objects.create(platform=platform, program=program, group=group, dates=dates,
+                # results = Smail.delay(platform, program, group, dates)
+                Renewmail.objects.create(task_id=results,platform=platform, program=program, group=group, dates=dates,
                                          res=results.state)
-                print(results)
-                # b = TaskMeta.objects.get(task_id='8278e9fc-b5d4-41d1-9dbb-f87fd3cce8c2').date_done
-                # messgs = result.get()
                 messgs = {'code': 0, 'msg': '发送成功!'}
             except:
                 messgs = {'code': 1, 'msg': '发送失败!'}
@@ -686,6 +697,20 @@ def mail_execute(request):
         return JsonResponse(messgs)
 
     return render(request, 'itom/proupdate/upmail/add.html', {"threeSelectData": Tselect()})
+
+@admin_required
+def mail_del(request):
+    if request.method == 'POST':
+        id = request.POST.get('id', None)
+        if id:
+            tid = Renewmail.objects.get(id=id).task_id
+            TaskMeta.objects.filter(task_id=tid).delete()
+            Renewmail.objects.filter(id=id).delete()
+            messgs = {'code': 0, 'msg': '修改成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败!'}
+
+        return JsonResponse(messgs)
 
 
 @admin_required
@@ -698,6 +723,23 @@ def async(request):
             org_list = Saltopera.objects.filter(version=keyword)
         else:
             org_list = Saltopera.objects.all()
+            for row in org_list:
+                try:
+                    res = Saltopera.objects.get(task_id=row.task_id).res
+                    tres = TaskMeta.objects.get(task_id=row.task_id).result
+                    sta = TaskMeta.objects.get(task_id=row.task_id).status
+                    if res != sta and tres != None:
+                        Saltopera.objects.filter(task_id=row.task_id).update(res=sta)
+                    elif tres == None and res != 'FAILURE':
+                        Saltopera.objects.filter(task_id=row.task_id).update(res='FAILURE')
+                    else:
+                        pass
+                except:
+                    res = Saltopera.objects.get(task_id=row.task_id).res
+                    if res != 'FAILURE':
+                        Saltopera.objects.filter(task_id=row.task_id).update(res='FAILURE')
+                    else:
+                        pass
         paginator = Paginator(org_list, int(limit))
         data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group,"week": n.wk,"version": n.version,
                  "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'), "result": n.res} for n in
@@ -713,7 +755,7 @@ def async(request):
     return render(request, 'itom/proupdate/async/index.html')
 
 @admin_required
-def asyncexecute(request):
+def async_execute(request):
     if request.method == 'POST':
         platform = request.POST.get('platform')
         program = request.POST.get('program')
@@ -724,17 +766,29 @@ def asyncexecute(request):
         if platform and program and version and wk and group and ftpadd:
             try:
                 results = Operation.apply_async((platform,program,group,wk,version,ftpadd))
-                Saltopera.objects.create(platform=platform,program=program,group=group,wk=wk,version=version,res=results.state)
-                print(results)
-                # Renewmail.objects.create(platform=platform, program=program, group=group, dates=week, result=result)
-                messgs = {'code': 0, 'msg': '发送成功!'}
+                Saltopera.objects.create(task_id=results,platform=platform,program=program,group=group,wk=wk,version=version,res=results.state)
+                messgs = {'code': 0, 'msg': '执行成功!'}
             except:
-                messgs = {'code': 1, 'msg': '发送失败!'}
+                messgs = {'code': 1, 'msg': '执行失败!'}
         else:
             messgs = {'code': 1, 'msg': '执行失败!'}
 
         return JsonResponse(messgs)
     return render(request, 'itom/proupdate/async/add.html', {"threeSelectData": Tselect()})
+
+@admin_required
+def async_del(request):
+    if request.method == 'POST':
+        id = request.POST.get('id', None)
+        if id:
+            tid = Saltopera.objects.get(id=id).task_id
+            TaskMeta.objects.filter(task_id=tid).delete()
+            Saltopera.objects.filter(id=id).delete()
+            messgs = {'code': 0, 'msg': '修改成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败!'}
+
+        return JsonResponse(messgs)
 
 
 @admin_required
@@ -748,7 +802,7 @@ def salt_group(request):
         else:
             org_list = Saltgroup.objects.all()
         paginator = Paginator(org_list, int(limit))
-        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group,
+        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group, "policyadd":n.policyadd,
                  "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S')} for n in paginator.page(int(page)).object_list]
         data = {
             "code": 0,
@@ -760,18 +814,19 @@ def salt_group(request):
 
     return render(request, 'itom/proupdate/saltgroup/index.html')
 
-
 @admin_required
 def salt_add(request):
     if request.method == 'POST':
         platform = request.POST.get('platform', None)
         program = request.POST.get('program', None)
         group = request.POST.get('group', None)
-        if platform and program and group:
+        policyadd = request.POST.get('policyadd', None)
+        if platform and program and group and policyadd:
             Saltgroup.objects.create(
                 platform=platform,
                 program=program,
                 group=group,
+                policyadd=policyadd,
             )
             messgs = {'code': 0, 'msg': '添加成功!'}
         else:
@@ -780,15 +835,14 @@ def salt_add(request):
     else:
         return render(request, 'itom/proupdate/saltgroup/add.html')
 
-
 @admin_required
 def salt_edit(request, id):
     if request.method == 'POST':
         program = request.POST.get('program', None)
         group = request.POST.get('group', None)
-        if program and group:
-            Saltgroup.objects.filter(id=id).update(program=program)
-            Saltgroup.objects.filter(id=id).update(group=group)
+        policyadd = request.POST.get('policyadd', None)
+        if program and group and policyadd:
+            Saltgroup.objects.filter(id=id).update(program=program,group=group,policyadd=policyadd)
             messgs = {'code': 0, 'msg': '修改成功!'}
         else:
             messgs = {'code': 1, 'msg': '修改失败!'}
@@ -796,7 +850,6 @@ def salt_edit(request, id):
 
     data = Saltgroup.objects.filter(id=id).first()
     return render(request, 'itom/proupdate/saltgroup/edit.html', {"data": data})
-
 
 @admin_required
 def salt_del(request):
@@ -809,3 +862,116 @@ def salt_del(request):
             messgs = {'code': 1, 'msg': '修改失败!'}
 
         return JsonResponse(messgs)
+
+
+@admin_required
+def r_log(request):
+    if request.method == 'POST':
+        page = request.POST.get('page', 1)
+        limit = request.POST.get('limit', 10)
+        keyword = request.POST.get('keyword', None)
+        if keyword:
+            org_list = Rsyslog.objects.filter(dates=keyword)
+        else:
+            org_list = Rsyslog.objects.all()
+            for row in org_list:
+                try:
+                    res = Rsyslog.objects.get(task_id=row.task_id).res
+                    tres = TaskMeta.objects.get(task_id=row.task_id).result
+                    sta = TaskMeta.objects.get(task_id=row.task_id).status
+                    if res != sta and tres != None:
+                        Rsyslog.objects.filter(task_id=row.task_id).update(res=sta)
+                    elif tres == None and res != 'FAILURE':
+                        Rsyslog.objects.filter(task_id=row.task_id).update(res='FAILURE')
+                except:
+                    pass
+        paginator = Paginator(org_list, int(limit))
+        data = [{"id": n.id, "program": n.program, "hostname": n.hostname, "ip":n.ip, "dates":n.dates,
+                 "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'), "result": n.res} for n in paginator.page(int(page)).object_list]
+        data = {
+            "code": 0,
+            "msg": "",
+            "count": paginator.count,
+            "data": data,
+        }
+        return JsonResponse(data)
+
+    return render(request, 'itom/proupdate/rsyslog/index.html')
+
+@admin_required
+def execute_log(request):
+    if request.method == 'POST':
+        net = request.POST.get('net', None)
+        program = request.POST.get('program', None)
+        hostname = request.POST.get('hostname', None)
+        ip = request.POST.get('ip', None)
+        dates = request.POST.get('dates', None)
+        if net and program and hostname and ip and dates:
+            try:
+                results = Rlog.apply_async((net, program, hostname, ip, dates))
+                Rsyslog.objects.create(task_id=results,program=program,hostname=hostname,ip=ip,dates=dates,res=results.state)
+                messgs = {'code': 0, 'msg': '执行成功!'}
+            except:
+                messgs = {'code': 1, 'msg': '执行失败!'}
+        else:
+            messgs = {'code': 1, 'msg': '执行失败!'}
+        return JsonResponse(messgs)
+    else:
+        return render(request, 'itom/proupdate/rsyslog/add.html')
+
+@admin_required
+def rlog_del(request):
+    if request.method == 'POST':
+        id = request.POST.get('id', None)
+        if id:
+            Rsyslog.objects.filter(id=id).delete()
+            messgs = {'code': 0, 'msg': '修改成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '修改失败!'}
+
+        return JsonResponse(messgs)
+
+
+@admin_required
+def flow_count(request):
+    if request.method == 'POST':
+        page = request.POST.get('page', 1)
+        limit = request.POST.get('limit', 10)
+        keyword = request.POST.get('keyword', None)
+        if keyword:
+            org_list = Saltgroup.objects.filter(group=keyword)
+        else:
+            org_list = Saltgroup.objects.all()
+        paginator = Paginator(org_list, int(limit))
+        # data = [{"id": n.id, "platform": n.platform, "counts": n.counts, "dates": n.dates,
+        #          "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'),"result":n.res,} for n in paginator.page(int(page)).object_list]
+        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group, "policyadd":n.policyadd,
+                 "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S')} for n in paginator.page(int(page)).object_list]
+        data = {
+            "code": 0,
+            "msg": "",
+            "count": paginator.count,
+            "data": data,
+        }
+        return JsonResponse(data)
+
+    return render(request, 'itom/proupdate/flows/index.html')
+
+@admin_required
+def mail_flow(request):
+    if request.method == 'POST':
+        platform = request.POST.get('platform', None)
+        asdl = request.POST.get('asdl', None)
+        dates = request.POST.get('dates', None)
+        if platform and dates:
+            Saltgroup.objects.create(
+                platform=platform,
+                asdl=asdl,
+                dates=dates,
+            )
+            messgs = {'code': 0, 'msg': '添加成功!'}
+        else:
+            messgs = {'code': 1, 'msg': '添加失败!'}
+        return JsonResponse(messgs)
+    else:
+        return render(request, 'itom/proupdate/flows/add.html')

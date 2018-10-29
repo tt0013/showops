@@ -20,6 +20,7 @@ urlpatterns = [
     url('^$', views.Login.as_view()),
 	url('^auth/', include('login.urls')),
     url('^itom/', include('itom.urls')),
+    url('^flow/', include('flow.urls')),
     # url('^renew/', include('renew.urls')),
 ]
 #错误页面定义

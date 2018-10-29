@@ -45,10 +45,19 @@ urlpatterns = [
     #程序更新
     url(r"^updatemail/", views.mail_mess, name="updatemail"),
     url(r"^upexecute/", views.mail_execute, name="upexecute"),
+    url(r"^maildel/", views.mail_del, name="maildel"),
     url(r"^async/", views.async, name="async"),
-    url(r"^asyncexecute/", views.asyncexecute, name="asyncexecute"),
+    url(r"^asyncexecute/", views.async_execute, name="asyncexecute"),
+    url(r"^asyncdel/", views.async_del, name="asyncdel"),
     url(r"^saltgroup/", views.salt_group, name="saltgroup"),
     url(r"^saltadd/", views.salt_add, name="saltadd"),
     url(r"^saltedit/(?P<id>\d+)$", views.salt_edit, name="saltedit"),
     url(r"^saltdel/", views.salt_del, name="saltdel"),
+    #实时日志
+    url(r"^rsyslog/", views.r_log, name="rsyslog"),
+    url(r"^executelog/", views.execute_log, name="executelog"),
+    url(r"^rlogdel/", views.rlog_del, name="rlogdel"),
+    #流量统计
+    url(r"^flow/", views.flow_count, name="flow"),
+    url(r"^mailflow/", views.mail_flow, name="mailflow"),
 ]
