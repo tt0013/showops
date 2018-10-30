@@ -79,7 +79,7 @@
     var dom = document.getElementById("up");
     var myChart = echarts.init(dom);
     var app = {};
-    var data = {{ up|safe }}
+    var data = {{ data|safe }}
         option = null;
         option = {
             title: {
@@ -108,14 +108,14 @@
             xAxis: {
                 type: 'category',
                 boundaryGap: false,
-                data: data['dates']
+                data: data['uptime']
             },
             yAxis: {
                 type: 'value'
             },
             series: [{
                 name: '域名带宽(Mbps)',
-                data: data['flow'],
+                data: data['upwidth'],
                 type: 'line',
                 markPoint: {
                     data: [
@@ -136,7 +136,7 @@
     var dom = document.getElementById("down");
     var myChart = echarts.init(dom);
     var app = {};
-    var data = {{ down|safe }}
+    var data = {{ data|safe }}
         option = null;
         option = {
             title: {
@@ -165,14 +165,14 @@
             xAxis: {
                 type: 'category',
                 boundaryGap: false,
-                data: data['dates']
+                data: data['downtime']
             },
             yAxis: {
                 type: 'value'
             },
             series: [{
                 name: '域名带宽(Mbps)',
-                data: data['flow'],
+                data: data['downwidth'],
                 type: 'line',
                 markPoint: {
                     data: [

@@ -1,7 +1,8 @@
 import time,datetime
 import json
 from django.shortcuts import render
-from updatetask.echarts.flow import Flowcount
+from updatetask.echarts.openapi import OpenApiDemo
+from updatetask.echarts.Popularity import Popularity
 from django.http import JsonResponse
 from django.shortcuts import render, HttpResponse
 from public.views import Sendmail, user_serach, Menulist, admin_required, login_required
@@ -13,11 +14,10 @@ def flows_count(request):
     if request.method == 'POST':
         return JsonResponse('1')
     if request.method == 'GET':
-        up = Flowcount('Up')
-        down = Flowcount('Down')
-        print(up['flow'])
-        print(max(up['flow']))
-        return render(request, 'proupdate/flows/add.html', {"up":up,"down":down})
+        d = OpenApiDemo()
+        data = d.Flowcount()
+        upmax = max(data['upwidth'])
+        return render(request, 'proupdate/flows/add.html', {"data":data})
     return render(request, 'proupdate/flows/add.html')
 
 # @admin_required

@@ -3,11 +3,12 @@
 # Author:Yang Tian Qi
 
 import hmac
+import json
 import base64
 import requests
 import datetime
+from urllib import parse
 from hashlib import sha256
-
 
 
 class OpenApiDemo(object):
@@ -46,5 +47,54 @@ class OpenApiDemo(object):
             resp = requests.get(httpUrl, params=httpBodyParams, headers=headers)
 
         return resp.text
+
+    def Flowcount(self):
+        today = datetime.date.today()
+        yesday = today - datetime.timedelta(days=1)
+        # tm = time.strftime("%H:%M:%S")
+        tm = (datetime.datetime.now() - datetime.timedelta(minutes=5)).strftime("%H:%M:%S")
+        httpHost = "https://open.chinanetcenter.com"
+        httpUri = "/api/report/domainbandwidth"
+        httpGetParams = {
+            "datefrom": "%sT%s+08:00" % (yesday, tm),
+            "dateto": "%sT%s+08:00" % (today, tm),
+            "type": "fiveminutes"
+        }
+
+        httpBodyParamsUP = r'''<?xml version="1.0" encoding="utf-8"?>
+                                    <domain-list>
+                                    <domain-name>pushws.sinashow.com</domain-name>
+                                    </domain-list>'''
+
+        httpBodyParamsDOWN = r'''<?xml version="1.0" encoding="utf-8"?>
+                                    <domain-list>
+                                    <domain-name>hdlnew.sinashow.com</domain-name>
+                                    <domain-name>hdlws.sinashow.com</domain-name>
+                                    <domain-name>hlsws.sinashow.com</domain-name>
+                                    <domain-name>pullws.sinashow.com</domain-name>
+                                    </domain-list>'''
+
+        openApiDemo = OpenApiDemo()
+        date = self.getDate()  # 获取系统时间
+        authStr = self.getAuth(date)  # 获取鉴权参数
+        headers = self.createHeader(authStr, date)  # 获取鉴权参数
+        httpUrl = httpHost + httpUri + "?" + parse.urlencode(httpGetParams)
+        up = openApiDemo.sendRequest(httpUrl, httpBodyParamsUP, headers)
+        down = openApiDemo.sendRequest(httpUrl, httpBodyParamsDOWN, headers)
+
+        uptime,upwidth,downtime,downwidth = [],[],[],[]
+        updata = json.loads(up)
+        downdata = json.loads(down)
+        for u in updata:
+            uptime.append(u['timestamp'])
+            upwidth.append(float(u['bandwidth']))
+        for d in downdata:
+            downtime.append(d['timestamp'])
+            downwidth.append(float(d['bandwidth']))
+
+        data = {"uptime": uptime, "upwidth": upwidth,"downtime":downtime,"downwidth":downwidth}
+
+        return data
+
 
 
