@@ -1,0 +1,107 @@
+{% extends 'itom/base.html' %}
+{% block title %}
+    流量统计
+{% endblock %}
+{% block main %}
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <fieldset class="layui-elem-field">
+                <legend>平台流量 - 统计</legend>
+                <div class="layui-field-box">
+                    <form class="layui-form" action="" lay-filter="admin-form">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">平台名称：</label>
+                            <div class="layui-input-block">
+                                <select name="platform" lay-verify="required">
+                                    <option value=""></option>
+                                    <option value="SinaShow">新浪SHOW</option>
+                                    <option value="FengBo">疯播</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">上下行带宽：</label>
+                            <div class="layui-input-block">
+                                <select name="adsl" lay-verify="required">
+                                    <option value=""></option>
+                                    <option value="up">上行带宽</option>
+                                    <option value="down">下行带宽</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">日期范围：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="dates" id="date1" autocomplete="off" lay-verify="required" class="layui-input" placeholder=" - ">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-input-block">
+                                <button class="layui-btn" lay-submit lay-filter="admin-form">立即提交</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </fieldset>
+        </div>
+        <div class="layui-card-body">
+            <fieldset class="layui-elem-field">
+                <legend>统计流量图</legend>
+            </fieldset>
+        </div>
+    </div>
+{% endblock %}
+
+{% block myScript %}
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+    <script>
+        layui.config({
+            base: '/static/layuiadmin/'
+        }).extend({
+            index: 'lib/index'
+        }).use(['index', 'form', 'laydate'], function () {
+            var $ = layui.$
+            ,admin = layui.admin
+            ,form = layui.form
+            ,laydate = layui.laydate;
+
+            laydate.render({
+                elem: '#date1'
+                ,type: 'datetime'
+                ,range: true
+            });
+
+            form.render(null, 'admin-form');
+
+            form.on('submit(admin-form)', function(data){
+                var field = data.field,
+                index = layer.load(2, {shade: false});
+                admin.req({
+                    url: "{% url 'mailflow' %}"
+                    ,method: 'POST'
+                    ,data: field
+                    ,success: function (msg) {
+                        layer.closeAll('loading');
+                        if(msg.code ==0){
+                            parent.layer.msg(msg.msg, {
+                                icon: 1,
+                                shade: [2, '#393D49'],
+                                time: 1500
+                            }, function () {
+                                parent.location.reload();
+                            });
+                        }else{
+                            parent.layer.msg(msg.msg, {
+                                icon: 5,
+                                shade: [2, '#393D49'],
+                                time: 1500
+                            });
+                        }
+                    }
+                  });
+              return false;
+            });
+
+        });
+    </script>
+{% endblock %}

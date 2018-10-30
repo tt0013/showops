@@ -1,0 +1,145 @@
+{% extends 'itom/base.html' %}
+{% block title %}
+    邮件发送
+{% endblock %}
+{% block main %}
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+          <div class="layui-col-md12">
+              <div class="layui-card">
+                  <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+                      <div class="layui-form-item">
+                          <div class="layui-inline">执行日期</div>
+                          <div class="layui-inline">
+                              <input type="text" name="keyword" placeholder="请输入" autocomplete="off" class="layui-input">
+                          </div>
+                          <div class="layui-inline">
+                              <button class="layui-btn layuiadmin-btn-admin" lay-submit lay-filter="LAY-org-back-search">
+                                  <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+            <div class="layui-card">
+                <div class="layui-card-body" style="border-bottom:1px solid #f6f6f6;">
+                    <button class="layui-btn layui-btn-normal api-add" data-type="add">
+                      <i class="layui-icon layui-icon-picture-fine"></i>发送邮件
+                  </button>
+                </div>
+              <div class="layui-card-body">
+                <table class="layui-hide" id="test-table-page" lay-filter="demo"></table>
+                <script type="text/html" id="barDemo">
+                    <a class="layui-btn layui-btn-sm" lay-event="edit">编辑</a>
+                    <a class="layui-btn layui-btn-danger layui-btn-sm" lay-event="del">删除</a>
+                </script>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+{% endblock %}
+{% block myScript %}
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+
+    <script>
+        layui.config({
+            base: '/static/layuiadmin/' //静态资源所在路径
+        }).extend({
+            index: 'lib/index' //主入口模块
+            }).use(['index', 'form', 'table'], function(e){
+                var $ = layui.$
+                ,form = layui.form
+                ,admin = layui.admin
+                ,table = layui.table;
+                table.render({
+                  elem: '#test-table-page'
+                  ,url: '/flow/flowscount/'
+                  ,method: 'POST'
+                  ,limit:10
+                  ,limits : [10, 20, 30]
+                  ,cols: [[
+                    {field: 'id', title: 'ID', width:80, align:'center', sort: true}
+                    ,{field: 'platform', title: '平台', width:200, align:'center'}
+                    ,{field: 'counts', title: '流量峰值(Mpbs)', width:230, align:'center'}
+                    ,{field: 'dates', title: '日期', width: 230, align:'center'}
+                    ,{field: 'ctime', title: '时间', minWidth: 200, align:'center',sort: true}
+                    ,{field: 'result', title: '结果', width: 200, align:'center', fixed: 'right',templet: function (d) {
+                        if(d.result === 'PENDING'){
+                            return '<span style="color: #c1bb1a;">'+ d.result +'</span>'
+                        } else if(d.result === 'SUCCESS'){
+                            return '<span style="color: #0aff5c;">'+ d.result +'</span>'
+                        }else {
+                            return '<span style="color: #ff0a0a;">'+ d.result +'</span>'
+                        }
+                    }}
+                    ,{width:180, align:'center', fixed: 'right', title: '操作', toolbar: '#barDemo'}
+                  ]]
+                  ,page: true
+                });
+
+                table.on('tool(demo)', function (obj) {
+                    var data = obj.data
+                        ,layEvent = obj.event
+                        ,url='/itom/saltedit/';
+                    if(layEvent == 'edit'){
+                        layer.open({
+                            type: 2,
+                            area: ['30%', '45%'],
+                            maxmin: true,
+                            content: url+data.id
+                        });
+                    }else if(layEvent == 'del'){
+                        layer.confirm('你确定要删除么？', {
+                            btn: ['确定', '取消']
+                        }, function(){
+                            var index = layer.load(2, {shade: false});
+                            admin.req({
+                                url: '/itom/maildel/',
+                                method: 'POST',
+                                data:{'id': data.id},
+                                success: function (msg) {
+                                    layer.closeAll('loading');
+                                    if(msg.code ==0){
+                                        layer.msg(msg.msg, {
+                                            icon: 1,
+                                            shade: [0.6, '#393D49'],
+                                            time: 1500
+                                        }, function () {
+                                            layer.closeAll('iframe');
+                                            table.reload('test-table-page');
+                                        });
+                                    }else{
+                                        layer.msg(msg.msg, {
+                                            icon: 5,
+                                            shade: [0.6, '#393D49'],
+                                            time: 1500
+                                        });
+                                    }
+                                }
+                            })
+                        })
+                    }
+                });
+
+                $('.api-add').on('click', function () {
+                    layer.open({
+                        type: 2,
+                        area: ['90%', '90%'],
+                        maxmin: true,
+                        content: "{% url 'flowscount' %}"
+                    });
+                });
+
+                //监听搜索
+                form.on('submit(LAY-org-back-search)', function (data) {
+                    var field = data.field;
+                    //执行重载
+                    table.reload('test-table-page', {
+                        where: field
+                    });
+                });
+            });
+    </script>
+
+{% endblock %}

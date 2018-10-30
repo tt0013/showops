@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>123</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="/static/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/layuiadmin/style/admin.css" media="all">
+    <link rel="stylesheet" href="/static/linkage/css/layui.css" />
+
+<body>
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <fieldset class="layui-elem-field">
+                <legend>程序更新 - 配置</legend>
+                <div class="layui-field-box">
+                    <form class="layui-form" action="" lay-filter="admin-form">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">请选择</label>
+                            <div class="layui-input-block">
+                                <select name="platform" id="platform" lay-filter="platform" lay-verify="required">
+                                    <option value="">请选择平台</option>
+                                </select>
+                            </div>
+                            <div class="layui-input-block">
+                                <label class="layui-form-label"></label>
+                                <select name="program" id="program" lay-filter="program">
+                                    <option value="">请选择程序</option>
+                                </select>
+                            </div>
+                            <div class="layui-input-block">
+                                <label class="layui-form-label"></label>
+                                <select name="group" id="group" lay-filter="group">
+                                    <option value="">请选择组名</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">日期：</label>
+                            <div class="layui-input-block">
+                                <select name="week" lay-verify="required">
+                                    <option value=""></option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">版本号：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="version" value="" lay-verify="required" placeholder="请输入" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">程序地址：</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="ftpadd" value="" lay-verify="required" placeholder="Ftp地址" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-input-block">
+                                <button class="layui-btn" lay-submit lay-filter="admin-form">提交</button>
+                                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+
+
+    <script src="/static/linkage/jquery-1.12.4.js"></script>
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+    <script type="text/javascript">
+        var defaults = {
+            s1: 'platform',
+            s2: 'program',
+            s3: 'group',
+            v1: null,
+            v2: null,
+            v3: null
+        };
+    </script>
+    <script>
+        var threeSelectData = {{ threeSelectData|safe }};
+    </script>
+    <script type="text/javascript" src="/static/linkage/province.js"></script>
+    <script>
+        layui.config({
+            base: '/static/layuiadmin/'
+        }).extend({
+            index: 'lib/index'
+        }).use(['index', 'form'], function () {
+            var $ = layui.$
+            ,admin = layui.admin
+            ,form = layui.form;
+
+            form.render(null, 'admin-form');
+
+            form.on('submit(admin-form)', function(data){
+                var field = data.field,
+                index = layer.load(2, {shade: false});
+                admin.req({
+                    url: "{% url 'asyncexecute' %}"
+                    ,method: 'POST'
+                    ,data: field
+                    ,success: function (msg) {
+                        layer.closeAll('loading');
+                        if(msg.code ==0){
+                            parent.layer.msg(msg.msg, {
+                                icon: 1,
+                                shade: [0.6, '#393D49'],
+                                time: 1500
+                            }, function () {
+                                parent.location.reload();
+                            });
+                        }else{
+                            parent.layer.msg(msg.msg, {
+                                icon: 5,
+                                shade: [0.6, '#393D49'],
+                                time: 1500
+                            });
+                        }
+                    }
+                  });
+              return false;
+            });
+        });
+    </script>
+
+</body>
