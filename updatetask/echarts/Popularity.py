@@ -13,8 +13,8 @@ from hashlib import sha256
 
 class Popularity(object):
     def __init__(self):
-        self.userName = 'sinashow'
-        self.apikey = 'qYRZvZWXdttqN6PgXMYL7uwmZQfC'
+        self.userName = ''
+        self.apikey = ''
         self.method = 'POST'
         self.accept = 'application/json'
 
