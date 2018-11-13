@@ -57,7 +57,4 @@ urlpatterns = [
     url(r"^rsyslog/", views.r_log, name="rsyslog"),
     url(r"^executelog/", views.execute_log, name="executelog"),
     url(r"^rlogdel/", views.rlog_del, name="rlogdel"),
-    #流量统计
-    url(r"^flow/", views.flow_count, name="flow"),
-    url(r"^mailflow/", views.mail_flow, name="mailflow"),
 ]

@@ -77,7 +77,7 @@
                 var field = data.field,
                 index = layer.load(2, {shade: false});
                 admin.req({
-                    url: "{% url 'mailflow' %}"
+                    url: "{% url 'bandwidth' %}"
                     ,method: 'POST'
                     ,data: field
                     ,success: function (msg) {

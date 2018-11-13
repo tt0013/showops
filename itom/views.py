@@ -641,7 +641,7 @@ def mail_mess(request):
         limit = request.POST.get('limit', 10)
         keyword = request.POST.get('keyword', None)
         if keyword:
-            org_list = Renewmail.objects.filter(version=keyword)
+            org_list = Renewmail.objects.filter(dates=keyword)
         else:
             org_list = Renewmail.objects.all()
             for row in org_list:
@@ -932,46 +932,4 @@ def rlog_del(request):
         return JsonResponse(messgs)
 
 
-@admin_required
-def flow_count(request):
-    if request.method == 'POST':
-        page = request.POST.get('page', 1)
-        limit = request.POST.get('limit', 10)
-        keyword = request.POST.get('keyword', None)
-        if keyword:
-            org_list = Saltgroup.objects.filter(group=keyword)
-        else:
-            org_list = Saltgroup.objects.all()
-        paginator = Paginator(org_list, int(limit))
-        # data = [{"id": n.id, "platform": n.platform, "counts": n.counts, "dates": n.dates,
-        #          "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S'),"result":n.res,} for n in paginator.page(int(page)).object_list]
-        data = [{"id": n.id, "platform": n.platform, "program": n.program, "group": n.group, "policyadd":n.policyadd,
-                 "ctime": n.ctime.strftime('%Y-%m-%d %H:%M:%S')} for n in paginator.page(int(page)).object_list]
-        data = {
-            "code": 0,
-            "msg": "",
-            "count": paginator.count,
-            "data": data,
-        }
-        return JsonResponse(data)
 
-    return render(request, 'itom/proupdate/flows/index.html')
-
-@admin_required
-def mail_flow(request):
-    if request.method == 'POST':
-        platform = request.POST.get('platform', None)
-        asdl = request.POST.get('asdl', None)
-        dates = request.POST.get('dates', None)
-        if platform and dates:
-            Saltgroup.objects.create(
-                platform=platform,
-                asdl=asdl,
-                dates=dates,
-            )
-            messgs = {'code': 0, 'msg': '添加成功!'}
-        else:
-            messgs = {'code': 1, 'msg': '添加失败!'}
-        return JsonResponse(messgs)
-    else:
-        return render(request, 'itom/proupdate/flows/add.html')

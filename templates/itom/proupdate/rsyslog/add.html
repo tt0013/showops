@@ -6,7 +6,7 @@
     <div class="layui-card">
         <div class="layui-card-body">
             <fieldset class="layui-elem-field">
-                <legend>salt组管理 - 添加</legend>
+                <legend>日志提取 - 添加</legend>
                 <div class="layui-field-box">
                     <form class="layui-form" action="" lay-filter="admin-form">
                         <div class="layui-form-item">
@@ -85,7 +85,7 @@
                 var field = data.field,
                 index = layer.load(2, {shade: false});
                 admin.req({
-                    url: "{% url 'flowscount' %}"
+                    url: "{% url 'executelog' %}"
                     ,method: 'POST'
                     ,data: field
                     ,success: function (msg) {

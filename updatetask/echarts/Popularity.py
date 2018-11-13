@@ -13,8 +13,8 @@ from hashlib import sha256
 
 class Popularity(object):
     def __init__(self):
-        self.userName = ''
-        self.apikey = ''
+        self.userName = 'sinashow'
+        self.apikey = 'qYRZvZWXdttqN6PgXMYL7uwmZQfC'
         self.method = 'POST'
         self.accept = 'application/json'
 
@@ -47,7 +47,7 @@ class Popularity(object):
 
         return resp.text
 
-    def Flowcount(self):
+    def Popucount(self):
         tdict,updict,downdict = {},{},{}
         days = datetime.date.today()
         httpHost = "https://open.chinanetcenter.com"

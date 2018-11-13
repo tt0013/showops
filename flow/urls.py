@@ -19,7 +19,7 @@ from . import views
 urlpatterns = [
     # url(r"^$", views.index),
     # 流量统计
-    url(r"^flowscount/", views.flows_count, name="flowscount"),
-    # url(r"^mailflow/", views.mail_flow, name="mailflow"),
+    url(r"^sinashowflow/", views.sinashow_flow, name="sinashowflow"),
+    url(r"^fengboflow/", views.fengbo_flow, name="fengboflow"),
 ]
 

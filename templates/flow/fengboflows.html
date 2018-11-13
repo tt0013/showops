@@ -1,0 +1,479 @@
+{% extends 'itom/base.html' %}
+{% block title %}
+    流量统计
+{% endblock %}
+{% block main %}
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+                        <div class="layui-form-item">
+                            <div class="layui-inline">网宿人气值：</div>
+                            <div class="layui-inline">
+                                <input style="width: 210px;" type="text" name="keyword" class="layui-input" autocomplete="off" placeholder="前一天网宿人气值" lay-verify="required">
+                            </div>
+                            <div class="layui-inline">
+                                <button class="layui-btn layuiadmin-btn-admin" lay-submit lay-filter="flows-search">
+                                    <i class="layui-icon layui-icon-add-1 layuiadmin-button-btn"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-card">
+                    <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+                        <form class="layui-form" action="" lay-filter="admin-form">
+                            <div class="layui-form-item">
+                            <label class="layui-form-label">收件人：</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="addressee" value="yangtianqi@tiange.com,wangsai@tiange.com" lay-verify="required" autocomplete="off" class="layui-input" placeholder="请输入收件人邮箱（必填）">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">抄送人：</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="copyper" value="" autocomplete="off" class="layui-input" placeholder="请输入抄送人邮箱（可不填）">
+                                    <input type="hidden" autocomplete="off" name="picone" id="baseo">
+                                    <input type="hidden" autocomplete="off" name="pictwo" id="baset">
+                                    <input type="hidden" autocomplete="off" name="picthree" id="baseh">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">描述：</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="formulation" value="" autocomplete="off" class="layui-input" placeholder="特殊情况输入描述（可不填）">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-input-block">
+                                    <button class="layui-btn" lay-submit lay-filter="mail-form">立即提交</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+              <div class="layui-card">
+                  <div class="layui-card-body my-div" style="width: 900px;">
+                      <fieldset class="layui-elem-field">
+                          <div id="width" style="width: 1000px;height:1000px;"></div>
+                          <div id="popuup" style="width: 1000px;height:500px;"></div>
+                          <div id="popudown" style="width: 1000px;height:500px;"></div>
+                      </fieldset>
+                  </div>
+              </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block myScript %}
+    <script src="https://cdn.bootcss.com/html2canvas/0.5.0-beta4/html2canvas.js"></script>
+    <script src="/static/layuiadmin/layui/layui.js"></script>
+    <script src="/static/pyecharts/echarts.js"></script>
+    <script type="text/javascript">
+        var dom = document.getElementById("width");
+        var myChart = echarts.init(dom);
+        var data = {{ widdata|safe }};
+        option = null;
+        option = {
+            animation: false,
+            visualMap: [{
+                show: false,
+                type: 'continuous',
+                seriesIndex: 0,
+                color: ['#4cdb93']
+            }, {
+                show: false,
+                type: 'continuous',
+                seriesIndex: 1,
+                dimension: 0,
+                color: ['#4cdb93']
+            }],
+            title: [{
+                padding: [15,5,5,15],
+                left: 'left',
+                text: '疯播上行流量统计图'
+            }, {
+                padding: [505,5,5,15],
+                left: 'left',
+                text: '疯播下行流量统计图'
+            }],
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: [{
+                data:['域名带宽(Mbps)'],
+                bottom: 10
+            },{
+                data:['域名带宽(Mbps)'],
+                bottom: 500
+            }],
+            toolbox: {
+                show: true,
+                padding: [15,5,5,5],
+                feature: {
+                    dataZoom: {
+                        yAxisIndex: 'none'
+                    },
+                    magicType: {type: ['line', 'bar']},
+                    restore: {show:false},
+                    saveAsImage: {}
+                }
+            },
+            xAxis: [{
+                data: data['uptime']
+            }, {
+                data: data['downtime'],
+                gridIndex: 1
+            }],
+            yAxis: [{
+                splitLine: {show: true}
+            }, {
+                splitLine: {show: true},
+                gridIndex: 1
+            }],
+            grid: [{
+                bottom: '55%'
+            }, {
+                top: '55%'
+            }],
+            series: [{
+                name: '域名带宽(Mbps)',
+                type: 'line',
+                showSymbol: false,
+                color: ['#EA0000'],
+                areaStyle: {show: true},
+                markPoint: {
+                    data: [
+                        {type: 'max', name: '最大值'},
+                    ]
+                },
+                data: data['upwidth']
+            }, {
+                name: '域名带宽(Mbps)',
+                type: 'line',
+                showSymbol: false,
+                color: ['#EA0000'],
+                areaStyle: {show: true},
+                markPoint: {
+                    data: [
+                        {type: 'max', name: '最大值'},
+                    ]
+                },
+                data: data['downwidth'],
+                xAxisIndex: 1,
+                yAxisIndex: 1
+            }]
+        };
+        myChart.setOption(option);
+        document.getElementById('baseo').value=myChart.getDataURL({pixelRatio: 1,backgroundColor: '#fff'});
+    </script>
+    <script type="text/javascript">
+        var dom = document.getElementById("popuup");
+        var myChart = echarts.init(dom);
+        var app = {};
+        var data = {{ Popu|safe }};
+        var colors = ['#FF2D2D','#01814A'];
+        option = null;
+        option = {
+            animation: false,
+            color: colors,
+            title: {
+                text: '疯播主播与上行带宽峰值',
+                padding: [5,5,5,5]
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
+                }
+            },
+            legend: {
+                data:['人气','流量'],
+                bottom: true
+            },
+            calculable : true,
+            toolbox: {
+                show: true,
+                right: 60,
+                feature: {
+                    magicType: {type: ['line', 'bar']},
+                    restore: {},
+                    saveAsImage: {}
+                }
+            },
+            xAxis: [{
+                type: 'category',
+                data: data['dates'],
+                axisTick: {
+                    alignWithLabel: true
+                }
+            }],
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '人气',
+                    position: 'left',
+                    min: 0,
+                    axisLine: {
+                        lineStyle: {
+                            color: colors[0]
+                        }
+                    },
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                },
+                {
+                    type: 'value',
+                    name: '流量',
+                    position: 'right',
+                    min: 0,
+                    max: 500,
+                    axisLine: {
+                        lineStyle: {
+                            color: colors[1]
+                        }
+                    },
+                    axisLabel: {
+                        formatter: '{value} M'
+                    }
+                }
+            ],
+            series: [
+                {
+                    name: '人气',
+                    data: data['anum'],
+                    type: 'line',
+                    barWidth:'40',
+                    itemStyle:{
+                        normal:{
+                            label:{
+                                show:true,
+                                position:'right'
+                            }
+                        }
+                    },
+                },
+                {
+                    name: '流量',
+                    data: data['uwidth'],
+                    type: 'bar',
+                    barWidth:'40',
+                    yAxisIndex: 1,
+                    itemStyle:{
+                        normal:{
+                            label:{
+                                show:true,
+                                position:'top'
+                            }
+                        }
+                    },
+                }
+            ]
+        };
+        myChart.setOption(option);
+        document.getElementById('baset').value=myChart.getDataURL({pixelRatio: 1,backgroundColor: '#fff'});
+    </script>
+    <script type="text/javascript">
+        var dom = document.getElementById("popudown");
+        var myChart = echarts.init(dom);
+        var app = {};
+        var data = {{ Popu|safe }};
+        var colors = ['#FF2D2D','#01814A','#0000FF'];
+        option = null;
+        option = {
+            animation: false,
+            color: colors,
+            title: {
+                text: '疯播主播与下行带宽峰值',
+                padding: [5,5,5,5]
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
+                }
+            },
+            legend: {
+                data:['平台人气','网宿流量','网宿人气'],
+                bottom: true
+            },
+            calculable : true,
+            toolbox: {
+                show: true,
+                right: 60,
+                feature: {
+                    magicType: {type: ['line', 'bar']},
+                    restore: {},
+                    saveAsImage: {}
+                }
+            },
+            xAxis: [{
+                type: 'category',
+                data: data['dates'],
+                axisTick: {
+                    alignWithLabel: true
+                }
+            }],
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '人气',
+                    position: 'left',
+                    min: 0,
+                    max: 5000,
+                    axisLine: {
+                        lineStyle: {
+                            color: colors[0]
+                        }
+                    },
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                },
+                {
+                    type: 'value',
+                    name: '流量',
+                    position: 'right',
+                    min: 0,
+                    max: 10000,
+                    axisLine: {
+                        lineStyle: {
+                            color: colors[1]
+                        }
+                    },
+                    axisLabel: {
+                        formatter: '{value} M'
+                    }
+                }
+            ],
+            series: [
+                {
+                    name: '平台人气',
+                    data: data['unum'],
+                    type: 'line',
+                    barWidth:'40',
+                    itemStyle:{
+                        normal:{
+                            label:{
+                                show:true,
+                                position:'right'
+                            }
+                        }
+                    },
+                },
+                {
+                    name: '网宿流量',
+                    data: data['dwidth'],
+                    type: 'bar',
+                    barWidth:'40',
+                    yAxisIndex: 1,
+                    itemStyle:{
+                        normal:{
+                            label:{
+                                show:true,
+                                position:'top'
+                            }
+                        }
+                    },
+                },
+                {
+                    name: '网宿人气',
+                    data: data['wsnum'],
+                    type: 'line',
+                    barWidth:'40',
+                    yAxisIndex: 1,
+                    itemStyle:{
+                        normal:{
+                            label:{
+                                show:true,
+                                position:'right'
+                            }
+                        }
+                    },
+                }
+            ]
+        };
+        myChart.setOption(option);
+        document.getElementById('baseh').value=myChart.getDataURL({pixelRatio: 1,backgroundColor: '#fff'});
+    </script>
+    <script>
+        layui.config({
+            base: '/static/layuiadmin/' //静态资源所在路径
+        }).extend({
+            index: 'lib/index' //主入口模块
+            }).use(['index', 'form', 'table'], function(){
+                var $ = layui.$
+                ,form = layui.form
+                ,admin = layui.admin;
+
+                form.render(null, 'admin-form');
+
+                form.on('submit(mail-form)', function(data){
+                    var field = data.field,
+                    index = layer.load(2, {shade: false});
+                    admin.req({
+                        url: "{% url 'fengboflow' %}"
+                        ,method: 'POST'
+                        ,data: field
+                        ,success: function (msg) {
+                            layer.closeAll('loading');
+                            if(msg.code ==0){
+                                parent.layer.msg(msg.msg, {
+                                    icon: 1,
+                                    shade: [0.6, '#393D49'],
+                                    time: 1500
+                                }, function () {
+                                    window.location.reload();
+                                });
+                            }else{
+                                parent.layer.msg(msg.msg, {
+                                    icon: 5,
+                                    shade: [0.6, '#393D49'],
+                                    time: 1500
+                                });
+                            }
+                        }
+                      });
+                  return false;
+                });
+
+
+                form.on('submit(flows-search)', function(data){
+                    var field = data.field,
+                    index = layer.load(2, {shade: false});
+                    admin.req({
+                        url: "{% url 'fengboflow' %}"
+                        ,method: 'POST'
+                        ,data: field
+                        ,success: function (msg) {
+                            layer.closeAll('loading');
+                            if(msg.code ==0){
+                                parent.layer.msg(msg.msg, {
+                                    icon: 1,
+                                    shade: [0.6, '#393D49'],
+                                    time: 1500
+                                }, function () {
+                                    window.location.reload();
+                                });
+                            }else{
+                                parent.layer.msg(msg.msg, {
+                                    icon: 5,
+                                    shade: [0.6, '#393D49'],
+                                    time: 1500
+                                });
+                            }
+                        }
+                      });
+                  return false;
+                });
+
+                {#form.verify({#}
+                {#   email: [/(^$)|^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/,'邮箱格式不正确'],#}
+                {#{);#}
+            });
+    </script>
+
+{% endblock %}

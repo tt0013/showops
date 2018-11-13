@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'itom.apps.ItomConfig',
     'public.apps.PublicConfig',
     'login.apps.LoginConfig',
+    'flow.apps.FlowConfig',
+    'ldap.apps.LdapConfig',
     'djcelery',
 ]
 

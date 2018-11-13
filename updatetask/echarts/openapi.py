@@ -13,8 +13,8 @@ from hashlib import sha256
 
 class OpenApiDemo(object):
     def __init__(self):
-        self.userName = ''
-        self.apikey = ''
+        self.userName = 'sinashow'
+        self.apikey = 'qYRZvZWXdttqN6PgXMYL7uwmZQfC'
         self.method = 'POST'
         self.accept = 'application/json'
 
@@ -87,14 +87,70 @@ class OpenApiDemo(object):
         downdata = json.loads(down)
         for u in updata:
             uptime.append(u['timestamp'])
-            upwidth.append(float(u['bandwidth']))
+            upwidth.append(float(u['flow']))
         for d in downdata:
             downtime.append(d['timestamp'])
-            downwidth.append(float(d['bandwidth']))
+            downwidth.append(float(d['flow']))
 
         data = {"uptime": uptime, "upwidth": upwidth,"downtime":downtime,"downwidth":downwidth}
 
         return data
+
+    def Popucount(self):
+        tdict,updict,downdict = {},{},{}
+        days = datetime.date.today()
+        httpHost = "https://open.chinanetcenter.com"
+        httpUri = "/api/report/domainbandwidth"
+        for i in range(7):
+            i += 1
+            tdict[str(days - datetime.timedelta(days=i))] = str(days - datetime.timedelta(days=i + 1))
+
+        httpBodyParamsUP = r'''<?xml version="1.0" encoding="utf-8"?>
+                                    <domain-list>
+                                    <domain-name>pushws.sinashow.com</domain-name>
+                                    </domain-list>'''
+
+        httpBodyParamsDOWN = r'''<?xml version="1.0" encoding="utf-8"?>
+                                    <domain-list>
+                                    <domain-name>hdlnew.sinashow.com</domain-name>
+                                    <domain-name>hdlws.sinashow.com</domain-name>
+                                    <domain-name>hlsws.sinashow.com</domain-name>
+                                    <domain-name>pullws.sinashow.com</domain-name>
+                                    </domain-list>'''
+
+        openApiDemo = OpenApiDemo()
+        date = self.getDate()  # 获取系统时间
+        authStr = self.getAuth(date)  # 获取鉴权参数
+        headers = self.createHeader(authStr, date)  # 获取鉴权参数
+        for t,y in tdict.items():
+            httpGetParams = {
+                "datefrom": "%sT00:00:00+08:00" % (y),
+                "dateto": "%sT00:00:00+08:00" % (t),
+                "type": "fiveminutes"
+            }
+            httpUrl = httpHost + httpUri + "?" + parse.urlencode(httpGetParams)
+            updata = openApiDemo.sendRequest(httpUrl, httpBodyParamsUP, headers)
+            downdata = openApiDemo.sendRequest(httpUrl, httpBodyParamsDOWN, headers)
+            updict[t] = updata
+            downdict[t] = downdata
+        uptime, upwidth, downtime, downwidth = [], [], [], []
+        for k,v in updict.items():
+            if k:
+                d = []
+                for i in json.loads(v):
+                    d.append(float(i['flow']))
+                uptime.append(k)
+                upwidth.append(max(d))
+        for k,v in downdict.items():
+            if k:
+                d = []
+                for i in json.loads(v):
+                    d.append(float(i['flow']))
+                downtime.append(k)
+                downwidth.append(max(d))
+        popudata = {"uptime": uptime[::-1], "upwidth": upwidth[::-1], "downtime": downtime[::-1], "downwidth": downwidth[::-1]}
+
+        return popudata
 
 
 
