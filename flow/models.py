@@ -5,7 +5,7 @@ from django.db import models
 class SinaShow_Bandwidth(models.Model):
     id = models.AutoField(primary_key=True)
     Time = models.IntegerField()
-    Week =  models.CharField(max_length=15)
+    Week = models.CharField(max_length=15)
     SHOW_JIAXING = models.IntegerField()
     SHOW_NingBo = models.IntegerField()
     SHOW_BaoJi = models.IntegerField()
@@ -48,13 +48,26 @@ class SinaShow_AvsUser(models.Model):
 
 class Fengbo_Bandwidth(models.Model):
     id = models.AutoField(primary_key=True)
-    Dtime = models.BigIntegerField()
-    Week = models.CharField(max_length=32)
+    Dtime = models.BigIntegerField(null=False)
+    Week = models.CharField(max_length=32, null=False)
     Usernum = models.IntegerField(null=False)
     Anchornum = models.IntegerField(null=False)
     Wangsunum = models.IntegerField(null=True)
-    Upbindwidth = models.FloatField(null=False)
-    Downbindwidth = models.FloatField(null=False)
+    Audionum = models.IntegerField(null=False)
+    Videonum = models.IntegerField(null=False)
+    Upbindwidth = models.IntegerField(null=False)
+    Downbindwidth = models.IntegerField(null=False)
+
+class YiShow_Bandwidth(models.Model):
+    id = models.AutoField(primary_key=True)
+    Dtime = models.BigIntegerField()
+    Week = models.CharField(max_length=32)
+    Motorinwidth = models.FloatField(null=False)
+    Motoroutwidth = models.FloatField(null=False)
+    Bgpinwidth = models.FloatField(null=False)
+    Bgpoutwidth = models.FloatField(null=False)
+    Buzznum = models.IntegerField(null=False)
+    Cdnwidth = models.IntegerField(null=False)
 
 
 

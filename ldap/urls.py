@@ -18,7 +18,22 @@ from . import views
 
 urlpatterns = [
     # url(r"^$", views.index),
-    # 流量统计
+    # ldap用户
     url(r"^userldap/", views.user_ldap, name="userldap"),
+    url(r"^ldapuseradd/", views.useradd_ldap, name="ldapuseradd"),
+    url(r"^ldapuserdel/", views.userdel_ldap, name="ldapuserdel"),
+    url(r"^ldapuserreset/", views.usereset_ldap, name="ldapuserreset"),
+    # ldap用户组
+    url(r"^groupldap/", views.group_ldap, name="groupldap"),
+    url(r"^ldapgroupadd/", views.groupadd_ldap, name="ldapgroupadd"),
+    url(r"^ldapgroupdel/", views.groupdel_ldap, name="ldapgroupdel"),
+    # ldap组织单元
+    url(r"^ouldap/", views.ou_ldap, name="ouldap"),
+    url(r"^ouadd/", views.ouadd_ldap, name="ouadd"),
+    url(r"^oudel/", views.oudel_ldap, name="oudel"),
+    # ldap sudo权限
+    url(r"^ldapsudo/", views.sudo_ldap, name="ldapsudo"),
+    url(r"^ldapsudoadd/", views.sudoadd_ldap, name="ldapsudoadd"),
+    url(r"^ldapsudodel/", views.sudodel_ldap, name="ldapsudodel"),
 ]
 

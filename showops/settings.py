@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'login.apps.LoginConfig',
     'flow.apps.FlowConfig',
     'ldap.apps.LdapConfig',
+    'upproduct.apps.UpproductConfig',
     'djcelery',
 ]
 
@@ -87,8 +88,8 @@ DATABASES = {
         'NAME': 'CMDB',
         'USER': 'root',
         'PASSWORD': 'sinashow',
-        'HOST': '192.168.9.126',
-        'PORT': '3306',
+        'HOST': '192.168.9.48',
+        'PORT': '33306',
         'OPTIONS': {
             'autocommit': True,
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -143,7 +144,8 @@ STATICFILES_DIRS = (
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 #celery settings
 #celery中间人 redis://redis服务所在的ip地址:端口/数据库号
-BROKER_URL = 'redis://:sinashow@192.168.9.167:6379'
+# BROKER_URL = 'redis://:192.168.9.126:6379'
+BROKER_URL = 'redis://192.168.9.18:30003/0'
 #celery结果返回，可用于跟踪结果
 # CELERY_RESULT_BACKEND = 'redis://:sinashow@192.168.9.167:6379'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler' # 定时任务调度器

@@ -604,6 +604,7 @@ def Tselect():
             tt_dict[row.group] = row.group
         elif row.program == 'PhoneChatServer':
             fb_dict[row.group] = row.group
+    print(crs_dict)
     threeSelectData = {
         "SinaShow":
             {"val": "SinaShow",

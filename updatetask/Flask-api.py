@@ -36,7 +36,6 @@ class SendMail(object):
         self.args = args
         self.username = 'monitor@sinashow.com'
         self.passwd = 'monitor'
-        # self.recv = ['yangtianqi@sinashow.com','tt06090013@163.com']
         self.recv = ['yangtianqi@sinashow.com']
         self.filename = os.getcwd()+'/RelyOn/CreateHtml.html'
         self.email_host = 'mail.sinashow.com'

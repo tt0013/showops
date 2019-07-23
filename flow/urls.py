@@ -21,5 +21,6 @@ urlpatterns = [
     # 流量统计
     url(r"^sinashowflow/", views.sinashow_flow, name="sinashowflow"),
     url(r"^fengboflow/", views.fengbo_flow, name="fengboflow"),
+    url(r"^yirenflow/", views.yiren_flow, name="yirenflow"),
 ]
 

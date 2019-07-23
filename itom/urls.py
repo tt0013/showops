@@ -53,8 +53,4 @@ urlpatterns = [
     url(r"^saltadd/", views.salt_add, name="saltadd"),
     url(r"^saltedit/(?P<id>\d+)$", views.salt_edit, name="saltedit"),
     url(r"^saltdel/", views.salt_del, name="saltdel"),
-    #实时日志
-    url(r"^rsyslog/", views.r_log, name="rsyslog"),
-    url(r"^executelog/", views.execute_log, name="executelog"),
-    url(r"^rlogdel/", views.rlog_del, name="rlogdel"),
 ]

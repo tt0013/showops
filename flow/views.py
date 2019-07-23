@@ -1,22 +1,25 @@
 import time
 import os,base64
-from updatetask.Popularity import AnalysisData
 from django.http import JsonResponse
 from django.shortcuts import render,render_to_response
-from public.views import Sendmail, user_serach, Menulist, admin_required, login_required
+from public.views import admin_required
 from .models import *
-from updatetask.echarts.mail import *
+from .mail import *
+from .tasks import *
+from django.db.models import Avg
+from .Popularity import *
 # Create your views here.
 
 
-startime = int(time.mktime(time.strptime(time.strftime('%Y%m%d', time.localtime(time.time() - 24 * 60 * 60 * 8)), "%Y%m%d")))
-
 @admin_required
 def fengbo_flow(request):
+    startime = int(time.mktime(time.strptime(time.strftime('%Y%m%d', time.localtime(time.time() - 24 * 60 * 60 * 8)), "%Y%m%d")))
+    # nowtime = int(time.mktime(time.strptime(time.strftime('%Y%m%d', time.localtime(time.time())), "%Y%m%d")))
     if request.method == 'POST':
         keyword = request.POST.get('keyword', None)
         addressee = request.POST.get('addressee', None)
         copyper = request.POST.get('copyper', None)
+        dates = request.POST.get('dates', None)
         describe = request.POST.get('formulation', None)
         picone = request.POST.get('picone',None)
         pictwo = request.POST.get('pictwo',None)
@@ -24,16 +27,22 @@ def fengbo_flow(request):
 
         if keyword:
             try:
-                Time = time.mktime(
-                    time.strptime(time.strftime('%Y-%m-%d', time.localtime(time.time() - 24 * 60 * 60)), "%Y-%m-%d"))
-                if Fengbo_Bandwidth.objects.filter(Dtime=Time).all():
-                    data = {'code': 1, 'msg': '数据存在,操作重复!'}
+                Time = time.mktime(time.strptime(dates.split(' - ')[0], "%Y-%m-%d"))
+                if Fengbo_Bandwidth.objects.get(Dtime=Time).Wangsunum:
+                    data = {'code': 1, 'msg': '数据已存在!'}
                 else:
-                    wid = AnalysisData()
-                    wid.InsertData(keyword)
+                    print(1)
+                    banddata = FengBoactualData(dates.split(' - ')[0], dates.split(' - ')[1], keyword)
+                    banddata.UpdateData()
                     data = {'code': 0, 'msg': '执行成功!'}
             except:
-                data = {"code": 1, "msg": '执行失败!'}
+                try:
+                    print(2)
+                    banddata = FengBoactualData(dates.split(' - ')[0], dates.split(' - ')[1], keyword)
+                    banddata.GetInsertData_Mssql()
+                    data = {'code': 0, 'msg': '执行成功!'}
+                except:
+                    data = {"code": 1, "msg": '执行失败!'}
         elif addressee:
             try:
                 dicts = {
@@ -50,7 +59,7 @@ def fengbo_flow(request):
                     copyper = ""
                 elif describe == None:
                     describe = ""
-                if fengbomail(addressee,copyper,describe):
+                if fengbomail(addressee, copyper, describe):
                     data = {'code': 0, 'msg': '执行成功!'}
                 else:
                     data = {"code": 1, "msg": '执行失败!'}
@@ -61,27 +70,26 @@ def fengbo_flow(request):
         return JsonResponse(data)
 
     elif request.method == 'GET':
-        today = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-        fromday = time.strftime('%Y-%m-%d', time.localtime(time.time() - 24 * 60 * 60))
-        tm = time.strftime('%H:%M:%S',time.localtime(time.time()))
-        wid = AnalysisData()
-        widdata = wid.Popuwidth(fromday+"T10:00:00",today+"T"+tm)
+        wid = FengBoactualData()
+        widdata = wid.Popuwidth()
         try:
-            obj = Fengbo_Bandwidth.objects.filter(Dtime__gt=startime)
-            dates, unum, anum, wsnum, uwidth, dwidth = [], [], [], [], [], []
+            obj = Fengbo_Bandwidth.objects.filter(Dtime__gt=startime).order_by('Dtime')
+            dates, anum, aunum, vinum, wsnum, uwidth, dwidth = [], [], [], [], [], [], []
             for row in obj:
                 if row.Wangsunum == None:
                     row.Wangsunum = 0
                 dates.append((time.strftime("%m/%d", time.localtime(row.Dtime))) + " " + "星期" + row.Week)
-                unum.append(row.Usernum)
                 anum.append(row.Anchornum)
+                aunum.append(row.Audionum)
+                vinum.append(row.Videonum)
                 wsnum.append(row.Wangsunum)
                 uwidth.append(row.Upbindwidth)
                 dwidth.append(row.Downbindwidth)
             Popu = {
                 "dates": dates,
-                "unum": unum,
                 "anum": anum,
+                "aunum": aunum,
+                "vinum": vinum,
                 "wsnum": wsnum,
                 "uwidth": uwidth,
                 "dwidth": dwidth
@@ -94,10 +102,86 @@ def fengbo_flow(request):
 
 
 @admin_required
+def yiren_flow(request):
+    startime = int(time.mktime(time.strptime(time.strftime('%Y%m%d', time.localtime(time.time() - 24 * 60 * 60 * 8)), "%Y%m%d")))
+    if request.method == 'POST':
+        dates = request.POST.get('dates', None)
+        addressee = request.POST.get('addressee', None)
+        copyper = request.POST.get('copyper', None)
+        describe = request.POST.get('formulation', None)
+        picone = request.POST.get('picone',None)
+        pictwo = request.POST.get('pictwo',None)
+        picthree = request.POST.get('picthree',None)
+
+        if dates:
+            banddata = YishowactualData(dates.split(' - ')[0], dates.split(' - ')[1])
+            Time = time.mktime(time.strptime(dates.split(' - ')[0], "%Y-%m-%d"))
+            if YiShow_Bandwidth.objects.filter(Dtime=Time).first() == None:
+                banddata.GetInsertData_Mssql()
+                data = {'code': 0, 'msg': '执行成功!'}
+            else:
+                data = {'code': 1, 'msg': '数据已存在!'}
+        elif addressee:
+            try:
+                dicts = {
+                    "image1": picone.split(",")[1].replace(" ", "+"),
+                    "image2": pictwo.split(",")[1].replace(" ", "+"),
+                    "image3": picthree.split(",")[1].replace(" ", "+"),
+                }
+                if not os.path.exists("E:\Django_Node\showops\\updatetask\echarts\images\YiShow\\"):
+                    os.makedirs("E:\Django_Node\showops\\updatetask\echarts\images\YiShow\\")
+                for k, v in dicts.items():
+                    with open("E:\Django_Node\showops\\updatetask\echarts\images\YiShow\\" + k + ".png", "wb") as f:
+                        f.write(base64.b64decode(v))
+                if copyper == None:
+                    copyper = ""
+                elif describe == None:
+                    describe = ""
+                if yshowmail(addressee, copyper, describe):
+                    data = {'code': 0, 'msg': '执行成功!'}
+                else:
+                    data = {"code": 1, "msg": '执行失败!'}
+            except:
+                data = {"code": 1, "msg": '执行失败!'}
+        else:
+            data = {"code": 1, "msg": '执行失败!'}
+        return JsonResponse(data)
+
+    elif request.method == 'GET':
+        bw = YishowactualData()
+        bwdata = bw.Popuwidth()
+        try:
+            obj = YiShow_Bandwidth.objects.filter(Dtime__gt=startime).order_by('Dtime')
+            dates, minwd, moutwd, binwd, boutwd, buzznum, cdnwd = [], [], [], [], [], [], []
+            for row in obj:
+                dates.append((time.strftime("%m/%d", time.localtime(row.Dtime))) + " " + "星期" + row.Week)
+                minwd.append(row.Motorinwidth)
+                moutwd.append(row.Motoroutwidth)
+                binwd.append(row.Bgpinwidth)
+                boutwd.append(row.Bgpoutwidth)
+                buzznum.append(row.Buzznum)
+                cdnwd.append(row.Cdnwidth)
+            Popu = {
+                "dates": dates,
+                "minwd": minwd,
+                "moutwd": moutwd,
+                "binwd": binwd,
+                "boutwd": boutwd,
+                "buzznum": buzznum,
+                "cdnwd": cdnwd
+            }
+            return render(request, 'flow/yirenflows.html', {"bwdata": bwdata, "Popu": Popu})
+        except:
+            return render(request, 'flow/yirenflows.html', {"bwdata": bwdata})
+    else:
+        return render(request, 'flow/yirenflows.html')
+
+@admin_required
 def sinashow_flow(request):
+    startime = int(time.mktime(time.strptime(time.strftime('%Y%m%d', time.localtime(time.time() - 24 * 60 * 60 * 8)), "%Y%m%d")))
     '''SinaShow'''
     get_7_daydata = SinaShow_Bandwidth.objects.filter(Time__gte=startime)
-    Totals,Dates = [],[]
+    Totals, Dates = [], []
     for i in get_7_daydata:
         Day = time.strftime('%m.%d', time.localtime(i.Time)) + " (星期%s)" %  i.Week
         Dates.append(Day)
@@ -134,6 +218,33 @@ def sinashow_flow(request):
         Mic_Vip_Num.append(int(Avsdata.Mic_Vip_Num))
         Traffic.append(int(Avsdata.Traffic))
 
+        '''show 近一周流量'''
+        SHOW_JiaXing, SHOW_BaoJi, SHOW_KS, SHOW_GanSu, SHOW_HG, SHOW_JinHua, SHOW_ChangZhi, SHOW_JinHua1, SHOW_JiaXing1 = [], [], [], [], [], [], [], [], []
+        for line in get_7_daydata:
+            SHOW_JiaXing.append(line.SHOW_JIAXING)
+            SHOW_BaoJi.append(line.SHOW_BaoJi)
+            SHOW_KS.append(line.SHOW_KS)
+            SHOW_GanSu.append(line.SHOW_GanSu)
+            SHOW_HG.append(line.SHOW_HG)
+            SHOW_JinHua.append(line.SHOW_JinHua)
+            SHOW_ChangZhi.append(line.SHOW_ChangZhi)
+            SHOW_JinHua1.append(line.SHOW_JinHua1)
+            SHOW_JiaXing1.append(line.SHOW_JiaXing1)
+
+        '''近8周'''
+        time_list = []
+        get_fridatatime = SinaShow_Bandwidth.objects.filter(Week='五').order_by("-Time")[0:9]
+        for mytime in get_fridatatime:
+            time_list.append(mytime.Time)
+        time_list.reverse()
+        num = len(time_list)
+        MaxTraffic_list = []
+        for i in range(0, num):
+            if i != num - 1:
+                Max_traff = SinaShow_Bandwidth.objects.filter(Time__gte=time_list[i], Time__lte=time_list[i + 1]).aggregate(
+                    Avg('Total'))
+                MaxTraffic_list.append(int(Max_traff['Total__avg']))
+
     data =  {
         'Total_list': Totals,
         'Dates': Dates,
@@ -151,7 +262,17 @@ def sinashow_flow(request):
         'Mic_Over_Num': Mic_Over_Num,
         'Mic_General_Num': Mic_General_Num,
         'Mic_Vip_Num': Mic_Vip_Num,
-        'Traffic': Traffic
+        'Traffic': Traffic,
+        'SHOW_JiaXing': SHOW_JiaXing,
+        'SHOW_BaoJi': SHOW_BaoJi,
+        'SHOW_KS': SHOW_KS,
+        'SHOW_GanSu': SHOW_GanSu,
+        'SHOW_HG': SHOW_HG,
+        'SHOW_JinHua': SHOW_JinHua,
+        'SHOW_ChangZhi': SHOW_ChangZhi,
+        'SHOW_JinHua1': SHOW_JinHua1,
+        'SHOW_JiaXing1': SHOW_JiaXing1,
+        'MaxTraffic_list': MaxTraffic_list
     }
 
     if request.method == 'POST':
@@ -188,7 +309,6 @@ def sinashow_flow(request):
         except:
             data = {"code": 1, "msg": '执行失败!'}
         return JsonResponse(data)
-    else:
-        return render_to_response('flow/showflows.html', data)
+    return render_to_response('flow/showflows.html', data)
 
 

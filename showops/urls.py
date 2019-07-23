@@ -22,7 +22,7 @@ urlpatterns = [
     url('^itom/', include('itom.urls')),
     url('^flow/', include('flow.urls')),
     url('^ldap/', include('ldap.urls')),
-    # url('^renew/', include('renew.urls')),
+    url('^upproduct/', include('upproduct.urls')),
 ]
 #错误页面定义
 handler403 = views.permission_denied

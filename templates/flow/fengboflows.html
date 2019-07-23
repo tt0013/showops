@@ -9,9 +9,15 @@
                 <div class="layui-card">
                     <div class="layui-form layui-card-header layuiadmin-card-header-auto">
                         <div class="layui-form-item">
+                            <div class="layui-inline">
+                              <label class="layui-form-label">日期范围</label>
+                              <div class="layui-input-inline">
+                                <input type="text" class="layui-input" name="dates" id="layui-date" autocomplete="off" placeholder=" - " lay-verify="required">
+                              </div>
+                            </div>
                             <div class="layui-inline">网宿人气值：</div>
                             <div class="layui-inline">
-                                <input style="width: 210px;" type="text" name="keyword" class="layui-input" autocomplete="off" placeholder="前一天网宿人气值" lay-verify="required">
+                                <input style="width: 210px;" type="text" name="keyword" class="layui-input" autocomplete="off" placeholder="请输入" lay-verify="required">
                             </div>
                             <div class="layui-inline">
                                 <button class="layui-btn layuiadmin-btn-admin" lay-submit lay-filter="flows-search">
@@ -68,7 +74,6 @@
 {% endblock %}
 
 {% block myScript %}
-    <script src="https://cdn.bootcss.com/html2canvas/0.5.0-beta4/html2canvas.js"></script>
     <script src="/static/layuiadmin/layui/layui.js"></script>
     <script src="/static/pyecharts/echarts.js"></script>
     <script type="text/javascript">
@@ -251,7 +256,7 @@
                         normal:{
                             label:{
                                 show:true,
-                                position:'right'
+                                position:'top'
                             }
                         }
                     },
@@ -281,7 +286,7 @@
         var myChart = echarts.init(dom);
         var app = {};
         var data = {{ Popu|safe }};
-        var colors = ['#FF2D2D','#01814A','#0000FF'];
+        var colors = ['#FF2D2D','#FF8040','#01814A','#A020F0'];
         option = null;
         option = {
             animation: false,
@@ -297,7 +302,7 @@
                 }
             },
             legend: {
-                data:['平台人气','网宿流量','网宿人气'],
+                data:['音频人气','视频人气','网宿流量','网宿人气'],
                 bottom: true
             },
             calculable : true,
@@ -322,8 +327,7 @@
                     type: 'value',
                     name: '人气',
                     position: 'left',
-                    min: 0,
-                    max: 5000,
+                    max: 300,
                     axisLine: {
                         lineStyle: {
                             color: colors[0]
@@ -337,11 +341,10 @@
                     type: 'value',
                     name: '流量',
                     position: 'right',
-                    min: 0,
-                    max: 10000,
+                    max: 7000,
                     axisLine: {
                         lineStyle: {
-                            color: colors[1]
+                            color: colors[2]
                         }
                     },
                     axisLabel: {
@@ -351,15 +354,30 @@
             ],
             series: [
                 {
-                    name: '平台人气',
-                    data: data['unum'],
+                    name: '视频人气',
+                    data: data['vinum'],
+                    type: 'line',
+                    barWidth:'40',
+                    yAxisIndex: 1,
+                    itemStyle:{
+                        normal:{
+                            label:{
+                                show:true,
+                                position:'right'
+                            }
+                        }
+                    },
+                },
+                {
+                    name: '音频人气',
+                    data: data['aunum'],
                     type: 'line',
                     barWidth:'40',
                     itemStyle:{
                         normal:{
                             label:{
                                 show:true,
-                                position:'right'
+                                position:'top'
                             }
                         }
                     },
@@ -389,7 +407,7 @@
                         normal:{
                             label:{
                                 show:true,
-                                position:'right'
+                                position:'top'
                             }
                         }
                     },
@@ -404,10 +422,16 @@
             base: '/static/layuiadmin/' //静态资源所在路径
         }).extend({
             index: 'lib/index' //主入口模块
-            }).use(['index', 'form', 'table'], function(){
+            }).use(['index', 'form', 'table', 'laydate'], function(){
                 var $ = layui.$
                 ,form = layui.form
+                ,laydate = layui.laydate
                 ,admin = layui.admin;
+
+                laydate.render({
+                    elem: '#layui-date'
+                    ,range: true
+                });
 
                 form.render(null, 'admin-form');
 
@@ -470,9 +494,6 @@
                   return false;
                 });
 
-                {#form.verify({#}
-                {#   email: [/(^$)|^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/,'邮箱格式不正确'],#}
-                {#{);#}
             });
     </script>
 
